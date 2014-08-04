@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!--android:foreground="?android:attr/selectableItemBackground"-->
+    <android.support.v7.widget.CardView
+        android:id="@+id/card_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardCornerRadius="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp">
+
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            android:background="@drawable/card_selector">
+
+            <RelativeLayout
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ds.vkplus.ui.view.RoundImageView
+                    android:id="@+id/avatar"
+                    android:src="@drawable/ic_action_content_picture"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp" />
+
+                <TextView
+                    android:id="@+id/title"
+                    android:text="Card Title"
+                    android:fontFamily="sans-serif-condensed"
+                    android:layout_marginLeft="8dp"
+                    android:textSize="20sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@+id/avatar" />
+
+                <TextView
+                    android:id="@+id/date"
+                    android:text="20 june 2014"
+                    android:textColor="@color/gray1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/title"
+                    android:layout_alignLeft="@+id/title" />
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray2"
+                android:layout_marginTop="5dp"
+                />
+
+
+
+            <TextView
+                android:id="@+id/text"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:text="aiosjd oiaj sdoi jaosd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="match_parent"
+                android:src="@drawable/ic_launcher"
+                android:adjustViewBounds="true"
+                android:background="@color/gray2"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+
+                <TextView
+                    android:id="@+id/comments"
+                    style="@style/news_bottom_icon_text"
+                    android:text="10"
+                    android:drawableLeft="@drawable/ic_action_social_reply" />
+
+                <TextView
+                    android:id="@+id/reposts"
+                    style="@style/news_bottom_icon_text"
+                    android:text="10"
+                    android:drawableLeft="@drawable/ic_action_social_share" />
+
+                <TextView
+                    android:id="@+id/likes"
+                    android:text="+5"
+                    style="@style/news_bottom_icon_text" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+
+    </android.support.v7.widget.CardView>
+</FrameLayout>
+
+
+
+

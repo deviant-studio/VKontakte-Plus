@@ -1,0 +1,20 @@
+buildscript {
+
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.+'
+        classpath 'me.tatarka:gradle-retrolambda:+'
+        classpath 'com.jakewharton.hugo:hugo-plugin:+'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+
+
+}
+

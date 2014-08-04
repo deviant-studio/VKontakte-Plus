@@ -1,0 +1,122 @@
+apply plugin: 'com.android.application'
+apply plugin: 'retrolambda'
+apply plugin: 'hugo'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion '19.1'
+
+    defaultConfig {
+        applicationId "ds.vkplus"
+        minSdkVersion 15
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+
+    /* configurations {
+         runtime.exclude(group: 'org.apache.commons', module: 'commons-lang')
+         runtime.exclude(group: 'org.apache.commons', module: 'commons-io')
+     }*/
+
+    dexOptions {
+        //incremental true
+        preDexLibraries = true
+        //jumboMode = false
+
+    }
+
+    lintOptions {
+
+        // set to true to turn off analysis progress reporting by lint
+        quiet true
+        // if true, stop the gradle build if errors are found
+        abortOnError false
+        // if true, only report errors
+        ignoreWarnings true
+        // if true, emit full/absolute paths to files with errors (true by default)
+        //absolutePaths true
+        // if true, check all issues, including those that are off by default
+        checkAllWarnings false
+        // if true, treat all warnings as errors
+        //warningsAsErrors true
+        // turn off checking the given issue id's
+        //disable 'TypographyFractions','TypographyQuotes'
+        // turn on the given issue id's
+        //enable 'RtlHardcoded','RtlCompat', 'RtlEnabled'
+        // check *only* the given issue id's
+        //check 'NewApi', 'InlinedApi'
+        // if true, don't include source code lines in the error output
+        //noLines true
+        // if true, show all locations for an error, do not truncate lists, etc.
+        //showAll true
+        // Fallback lint configuration (default severities, etc.)
+        //lintConfig file("default-lint.xml")
+        // if true, generate a text report of issues (false by default)
+        //textReport true
+        // location to write the output; can be a file or 'stdout'
+        //textOutput 'stdout'
+        // if true, generate an XML report for use by for example Jenkins
+        //xmlReport false
+        // file to write report to (if not specified, defaults to lint-results.xml)
+        //xmlOutput file("lint-report.xml")
+        // if true, generate an HTML report (with issue explanations, sourcecode, etc)
+        //htmlReport true
+        // optional path to report (default will be lint-results.html in the builddir)
+        //htmlOutput file("lint-report.html")
+
+        // set to true to have all release builds run lint on issues with severity=fatal
+
+        // and abort the build (controlled by abortOnError above) if fatal issues are found
+
+        //checkReleaseBuilds true
+
+        // Set the severity of the given issues to fatal (which means they will be
+        // checked during release builds (even if the lint target is not included)
+        //fatal 'NewApi', 'InlineApi'
+        // Set the severity of the given issues to error
+        //error 'Wakelock', 'TextViewEdits'
+        // Set the severity of the given issues to warning
+        //warning 'ResourceAsColor'
+        // Set the severity of the given issues to ignore (same as disabling the check)
+        //ignore 'TypographyQuotes'
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.netflix.rxjava:rxjava-android:+'
+    compile 'com.squareup.retrofit:retrofit:+'
+    compile 'com.squareup.dagger:dagger:+'
+    provided 'com.squareup.dagger:dagger-compiler:+'
+    compile 'com.squareup.picasso:picasso:+'
+    compile 'com.squareup:otto:+'
+    //compile 'com.google.code.gson:gson:+'
+    //compile 'de.greenrobot:eventbus:+'
+    //compile 'com.squareup.okhttp:okhttp:+'
+    //compile 'me.tatarka.rxloader:rxloader:+'
+    compile 'com.googlecode.android-query:android-query:+'
+    compile 'com.jakewharton:butterknife:+'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:+'
+    compile 'com.android.support:support-v4:21.+'
+    compile 'com.android.support:cardview-v7:21.+'
+    compile 'com.android.support:palette-v7:21.+'
+    compile 'com.android.support:recyclerview-v7:21.+'
+    //compile project(":vk_sdk")
+}

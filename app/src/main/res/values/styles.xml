@@ -1,0 +1,27 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="news_bottom_icon_text">
+        <item name="android:drawableLeft">@drawable/ic_action_rating_good</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:layout_marginLeft">20dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/gray1</item>
+        <item name="android:background">@drawable/card_selector</item>
+    </style>
+
+    <style name="empty_list_text">
+        <item name="android:id">@android:id/empty</item>
+        <item name="android:text">@string/no_items</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:textColor">@color/gray1</item>
+    </style>
+
+</resources>
