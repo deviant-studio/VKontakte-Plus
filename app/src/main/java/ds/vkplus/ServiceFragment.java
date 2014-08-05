@@ -1,3 +1,4 @@
+/*
 package ds.vkplus;
 
 import android.content.ComponentName;
@@ -50,3 +51,4 @@ public abstract class ServiceFragment extends Fragment implements ServiceConnect
 		getActivity().setProgressBarIndeterminateVisibility(enable);
 	}
 }
+*/

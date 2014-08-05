@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <array name="overflow_items">
+        <item>Debug</item>
+    </array>
+
     <string name="app_name">VK+</string>
     <string name="action_settings">Settings</string>
     <string name="account_type">ds.vkplus</string>
     <string name="no_items">No Items</string>
+    <string name="comments">Comments</string>
+    <string name="news">News</string>
+    <string name="page">Page</string>
+    <string name="more_">More…</string>
 
 </resources>

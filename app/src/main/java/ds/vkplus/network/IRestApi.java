@@ -7,13 +7,13 @@ import rx.Observable;
 
 interface IRestApi {
 
-	@GET("/newsfeed.get")
+	/*@GET("/newsfeed.get")
 	ApiResponse<NewsResponse> getNews(
 			@Query("filters") String filters,
 			@Query("source_ids") String sourceIds,  // groups, friends, pages, following, <uid>
 			@Query("start_from") String next,
 			@Query("count") int count);             // max=100
-
+*/
 	@GET("/newsfeed.get")
 	Observable<ApiResponse<NewsResponse>> getNews2(
 			@Query("filters") String filters,
@@ -43,7 +43,7 @@ interface IRestApi {
 			положительное число
 	extended	1 — комментарии в ответе будут возвращены в виде пронумерованных объектов, дополнительно будут возвращены списки объектов profiles, groups.
 	флаг, может принимать значения 1 или 0, доступен начиная с версии 5.0*/
-	@GET("/newsfeed.get?need_likes=1&extended=1&sort=asc")
+	@GET("/wall.getComments?need_likes=1&extended=1&sort=asc")
 	Observable<ApiResponse<CommentsList>> getComments(
 			//@Query("filters") String filters,
 			//@Query("source_ids") String sourceIds,  // groups, friends, pages, following, <uid>

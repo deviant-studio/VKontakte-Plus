@@ -8,8 +8,6 @@ final public class ApiResponse<T> {
 	public Error error;
 
 
-
-
 	@Override
 	public String toString() {
 		return new Gson().toJson(this);

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:actionBarItemBackground">@drawable/light_selector</item>
+        <item name="android:listChoiceBackgroundIndicator">@drawable/card_selector</item>
+    </style>
+
+    <style name="ActionBar" parent="android:Widget.Holo.ActionBar.Solid">
+        <item name="android:background">@color/app_color</item>
+        <item name="android:backgroundSplit">@color/app_color</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitle</item>
+        <item name="android:logo">@drawable/logo</item>
+    </style>
+
+    <style name="ActionBarTitle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+</resources>

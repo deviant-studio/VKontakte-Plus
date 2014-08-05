@@ -10,6 +10,7 @@ public class News {
 	public long source_id;
 	public long date;
 	public long post_id;
+	public long signer_id;
 	public News[] copy_history;
 
 	public List<Attachment> attachments;
@@ -18,7 +19,10 @@ public class News {
 	public Likes likes;
 	public Reposts reposts;
 
+	// local stuff
 	public Producer producer;
+	public Producer signer;
+	public Boolean isExpanded;  // 3-state flag
 
 
 
@@ -41,12 +45,6 @@ public class News {
 	}
 
 
-	public static class Likes {
 
-		public int count;
-		public int user_likes;
-		public int can_like;
-		public int can_publish;
-	}
 
 }

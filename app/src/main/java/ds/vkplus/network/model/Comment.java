@@ -25,5 +25,8 @@ public class Comment {
 	public long reply_to_user;
 	public long reply_to_comment;
 	public List<Attachment> attachments;
+	public Likes likes;
+
+	public Producer producer;
 
 }

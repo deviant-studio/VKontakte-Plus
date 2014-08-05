@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="12dp"
+    android:paddingTop="12dp">
+
+    <ds.vkplus.ui.view.RoundImageView
+        android:id="@+id/icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_action_social_person" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@+id/icon"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-condensed"
+
+            android:text="John Smith"
+            android:textColor="@color/dark"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:text="this is really long comment blab alb alb albaoishd oahsud oiuh qiuowdh ioquwh diuq hwdiuqh wdiuqhwoflulhiuhlku luka hwelfkuh alkusehf lkuawehf lkua flkuha lkwefuh"
+            android:textColor="@color/dark"
+            android:textSize="15sp" />
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:src="@drawable/ic_launcher"
+            android:visibility="gone" />
+
+        <include layout="@layout/item_link" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/likes"
+        style="@style/news_bottom_icon_text"
+        android:layout_alignBaseline="@+id/date"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="10dp"
+        android:background="@null"
+        android:drawableLeft="@null"
+        android:padding="4dp"
+        android:text="+5" />
+
+
+    <TextView
+        android:id="@+id/date"
+        style="@style/date_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/content"
+        android:layout_below="@+id/content"
+        android:text="12 July 2014" />
+
+
+</RelativeLayout>
+

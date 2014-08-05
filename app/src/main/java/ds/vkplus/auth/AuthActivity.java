@@ -10,6 +10,7 @@ import android.webkit.URLUtil;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import ds.vkplus.Constants;
+import ds.vkplus.PrivateConstants;
 import ds.vkplus.utils.L;
 
 import java.util.regex.Matcher;
@@ -18,7 +19,7 @@ import java.util.regex.Pattern;
 public class AuthActivity extends AccountAuthenticatorActivity {
 
 	public static final String AUTH_URL = "https://oauth.vk.com/authorize?" +
-			"client_id=" + Constants.VK_APP_ID + "&" +
+			"client_id=" + PrivateConstants.VK_APP_ID + "&" +
 			"scope=groups,friends,wall&" +
 			"redirect_uri=https://oauth.vk.com/blank.html&" +
 			"display=mobile&" +
@@ -87,6 +88,8 @@ public class AuthActivity extends AccountAuthenticatorActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		L.v("doing notify()");
-		AccountHelper.getInstance().notify();
+		synchronized (AccountHelper.getInstance()) {
+			AccountHelper.getInstance().notify();
+		}
 	}
 }

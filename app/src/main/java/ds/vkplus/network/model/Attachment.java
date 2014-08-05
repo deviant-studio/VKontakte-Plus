@@ -42,6 +42,7 @@ public class Attachment {
 	public Album album;
 	public Poll poll;
 	public Document document;
+	public Page page;
 	// ...
 
 
@@ -239,6 +240,21 @@ public class Attachment {
 
 		public long id;
 		public String question;
+
+	}
+
+
+	public static class Page {
+
+/*
+    pid — идентификатор wiki страницы;
+    gid — идентификатор группы, которой принадлежит wiki страница;
+    title — название wiki страницы.
+*/
+
+		public long pid;
+		public long gid;
+		public String title;
 
 	}
 
