@@ -1,4 +1,4 @@
-package ds.vkplus.network.model;
+package ds.vkplus.model;
 
 import ds.vkplus.utils.L;
 import rx.Observable;
@@ -17,7 +17,7 @@ public class NewsResponse {
 
 
 	// should call it after each json deserialization
-	public void init() {
+	/*public void init() {
 		L.v("generation item<->producer relation");
 
 		for (News item : items) {
@@ -36,7 +36,7 @@ public class NewsResponse {
 
 
 		}
-	}
+	}*/
 
 
 	private Producer getProducerById(final long id) {

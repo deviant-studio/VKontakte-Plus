@@ -1,7 +1,13 @@
-package ds.vkplus.network.model;
+package ds.vkplus.model;
 
-import java.util.List;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
+import com.j256.ormlite.table.DatabaseTable;
+import ds.vkplus.db.extras.AndroidBaseDaoImpl;
 
+import java.util.Collection;
+
+@DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
 public class Comment {
 
 	/*id	идентификатор комментария.
@@ -18,14 +24,26 @@ public class Comment {
 	положительное число
 	attachments	объект, содержащий информацию о медиавложениях в комментарии. См. описание формата медиавложений.*/
 
+	@DatabaseField(id = true)
 	public long id;
+	@DatabaseField
 	public long from_id;
+	@DatabaseField
 	public long date;
+	@DatabaseField
 	public String text;
+	@DatabaseField
 	public long reply_to_user;
+	@DatabaseField
 	public long reply_to_comment;
-	public List<Attachment> attachments;
+	@ForeignCollectionField
+	public Collection<Attachment> attachments;
 	public Likes likes;
+
+	@DatabaseField
+	public int likesCount;
+	@DatabaseField
+	public boolean likesUserLikes;
 
 	public Producer producer;
 

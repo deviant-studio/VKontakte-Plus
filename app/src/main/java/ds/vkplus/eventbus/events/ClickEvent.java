@@ -1,6 +1,6 @@
 package ds.vkplus.eventbus.events;
 
-import ds.vkplus.network.model.News;
+import ds.vkplus.model.News;
 
 public class ClickEvent {
 	public long id;

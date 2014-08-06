@@ -3,10 +3,12 @@ package ds.vkplus.network;
 import android.app.Activity;
 import com.google.gson.Gson;
 import ds.vkplus.auth.AccountHelper;
+import ds.vkplus.db.DBHelper;
 import ds.vkplus.exception.VKException;
-import ds.vkplus.network.model.ApiResponse;
-import ds.vkplus.network.model.CommentsList;
-import ds.vkplus.network.model.NewsResponse;
+import ds.vkplus.model.ApiResponse;
+import ds.vkplus.model.CommentsList;
+import ds.vkplus.model.News;
+import ds.vkplus.model.NewsResponse;
 import ds.vkplus.utils.L;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
@@ -16,6 +18,8 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.ReplaySubject;
 
+import java.util.List;
+
 public class RestService {
 
 	public static final String BASE_URL = "https://api.vk.com/method";
@@ -24,6 +28,7 @@ public class RestService {
 	IRestApi restApi;
 	static RestService instance;
 	public Gson gson;
+	private DBHelper db = DBHelper.instance();
 
 	/*	Observable<String> login = work(s -> {
 			try {
@@ -64,7 +69,6 @@ public class RestService {
 
 		restApi = restAdapter.create(IRestApi.class);
 	}
-
 
 
 	private RequestInterceptor getInterceptor() {
@@ -117,7 +121,8 @@ public class RestService {
 							try {
 								token = AccountHelper.getInstance().refreshToken();
 								L.v("done refresh token. repeating request...");
-								request.repeat();
+								request.subscribe();
+								return;
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 								subscriber.onError(new VKException());
@@ -141,7 +146,7 @@ public class RestService {
 		      .observeOn(AndroidSchedulers.mainThread())
 		      .subscribe(result);
 
-		return result;
+		return result/*helper*/;
 
 	}
 
@@ -171,11 +176,27 @@ public class RestService {
 
 	public Observable<NewsResponse> getNews(String next, int count) {
 		String filters = "post";
-		return networker(restApi.getNews2(filters, null, next, count));
+		Observable<NewsResponse> newsObserver = networker(restApi.getNews2(filters, null, next, count));
+		return newsObserver;
 	}
 
 
-	public Observable<CommentsList> getComments(final long postId,final long ownerId,final int offset,final int count) {
+	public Observable<List<News>> getNews2(String next, int count) {
+		String filters = "post";
+		ReplaySubject<List<News>> result = ReplaySubject.create();
+		Observable<NewsResponse> newsObserver = networker(restApi.getNews2(filters, null, next, count));
+		newsObserver.subscribe(news -> {
+			db.saveNews(news);
+			final List<News> allNews = db.fetchNews();
+			result.onNext(allNews);
+			result.onCompleted();
+		}, result::onError);
+
+		return result;
+	}
+
+
+	public Observable<CommentsList> getComments(final long postId, final long ownerId, final int offset, final int count) {
 		return networker(restApi.getComments(postId, ownerId, offset, count));
 	}
 }

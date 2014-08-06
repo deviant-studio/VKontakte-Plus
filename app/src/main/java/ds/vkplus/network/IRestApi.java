@@ -1,6 +1,8 @@
 package ds.vkplus.network;
 
-import ds.vkplus.network.model.*;
+import ds.vkplus.model.ApiResponse;
+import ds.vkplus.model.CommentsList;
+import ds.vkplus.model.NewsResponse;
 import retrofit.http.GET;
 import retrofit.http.Query;
 import rx.Observable;

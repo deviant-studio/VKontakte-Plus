@@ -1,4 +1,4 @@
-package ds.vkplus.network.model;
+package ds.vkplus.model;
 
 import ds.vkplus.utils.L;
 import rx.Observable;

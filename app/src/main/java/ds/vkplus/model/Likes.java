@@ -1,4 +1,4 @@
-package ds.vkplus.network.model;
+package ds.vkplus.model;
 
 public class Likes {
 

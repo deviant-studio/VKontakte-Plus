@@ -1,6 +1,6 @@
 package ds.vkplus.exception;
 
-import ds.vkplus.network.model.ApiResponse;
+import ds.vkplus.model.ApiResponse;
 
 public class VKException extends RuntimeException {
 
