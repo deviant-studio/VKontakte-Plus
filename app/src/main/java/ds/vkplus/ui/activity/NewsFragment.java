@@ -19,18 +19,21 @@ import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import ds.vkplus.App;
 import ds.vkplus.Constants;
+import ds.vkplus.Prefs;
 import ds.vkplus.R;
 import ds.vkplus.eventbus.EventBus;
 import ds.vkplus.eventbus.events.ClickEvent;
+import ds.vkplus.model.Attachment;
+import ds.vkplus.model.News;
+import ds.vkplus.model.NewsResponse;
 import ds.vkplus.network.RestService;
-import ds.vkplus.network.model.Attachment;
-import ds.vkplus.network.model.News;
-import ds.vkplus.network.model.NewsResponse;
 import ds.vkplus.ui.OnScrollBottomRecyclerViewListener;
 import ds.vkplus.utils.L;
 import ds.vkplus.utils.T;
 import ds.vkplus.utils.Utils;
 import rx.Subscriber;
+
+import java.util.List;
 
 public class NewsFragment extends BaseFragment {
 
@@ -44,7 +47,7 @@ public class NewsFragment extends BaseFragment {
 
 
 	String token;
-	String next;
+	//String next;
 	NewsRecyclerAdapter adapter;
 	private RecyclerView.LayoutManager mLayoutManager;
 
@@ -60,13 +63,17 @@ public class NewsFragment extends BaseFragment {
 		ButterKnife.inject(this, view);
 
 		recyclerView.setHasFixedSize(true);
-
 		recyclerView.setItemAnimator(new DefaultItemAnimator());
 		mLayoutManager = new LinearLayoutManager(getActivity());
 		recyclerView.setLayoutManager(mLayoutManager);
-		recyclerView.setOnScrollListener(new OnScrollBottomRecyclerViewListener((LinearLayoutManager) mLayoutManager, success -> loadMoreNews(next)));
+		recyclerView.setOnScrollListener(new OnScrollBottomRecyclerViewListener((LinearLayoutManager) mLayoutManager, success -> loadMoreNews(getNext())));
 
 		super.onViewCreated(view, savedInstanceState);
+	}
+
+
+	private String getNext() {
+		return Prefs.get().getString(Constants.KEY_NEXT, null);
 	}
 
 
@@ -76,9 +83,9 @@ public class NewsFragment extends BaseFragment {
 
 
 	private void loadMoreNews(final String next) {
-		rest.getNews(next, PAGE_SIZE)
+		rest.getNews2(next, PAGE_SIZE)
 				//.subscribe(this::fillView, e -> T.show(getActivity(), "error getting news"));
-				.subscribe(new Subscriber<NewsResponse>() {
+				.subscribe(new Subscriber<List<News>>() {
 
 					@Override
 					public void onStart() {
@@ -95,15 +102,15 @@ public class NewsFragment extends BaseFragment {
 					@Override
 					public void onError(final Throwable e) {
 						L.e("error catched in fragment");
-						toggleProgress(false);
 						e.printStackTrace();
+						toggleProgress(false);
 					}
 
 
 					@Override
-					public void onNext(final NewsResponse news) {
+					public void onNext(final List<News> news) {
 						if (news != null) {
-							news.init();
+							//news.init();
 							fillView(news);
 						}
 
@@ -119,7 +126,7 @@ public class NewsFragment extends BaseFragment {
 	}
 
 
-	private void fillView(final NewsResponse news) {
+/*	private void fillView(final NewsResponse news) {
 		if (news.items.size() != 0)
 			empty.setVisibility(View.GONE);
 
@@ -132,6 +139,21 @@ public class NewsFragment extends BaseFragment {
 		} else {
 			adapter.add(news);
 		}
+	}*/
+
+
+	private void fillView(final List<News> news) {
+		if (news.size() != 0)
+			empty.setVisibility(View.GONE);
+
+		L.v("next: " + getNext());
+		adapter = new NewsRecyclerAdapter(news);
+		recyclerView.setAdapter(adapter);
+		/*if (adapter == null) {
+
+		} else {
+			adapter.add(news);
+		}*/
 	}
 
 
@@ -141,7 +163,7 @@ public class NewsFragment extends BaseFragment {
 		News item = e.item;
 		switch (e.viewId) {
 			case R.id.comments:
-				if (item.comments.count > 0) {
+				if (item.commentsCount > 0) {
 					Intent i = new Intent(getActivity(), CommentsActivity.class);
 					i.putExtra(Constants.KEY_POST_ID, item.post_id);
 					i.putExtra(Constants.KEY_OWNER_ID, item.source_id);
@@ -161,11 +183,11 @@ public class NewsFragment extends BaseFragment {
 
 	public static class NewsRecyclerAdapter extends RecyclerView.Adapter<NewsRecyclerAdapter.Holder> {
 
-		private NewsResponse data;
+		private List<News> data;
 		Picasso picasso;
 
 
-		private NewsRecyclerAdapter(NewsResponse data) {
+		private NewsRecyclerAdapter(List<News> data) {
 			this.data = data;
 			picasso = Picasso.with(App.instance());
 			setHasStableIds(true);
@@ -183,18 +205,18 @@ public class NewsFragment extends BaseFragment {
 		@Override
 		public void onBindViewHolder(final Holder h, final int p) {
 			//L.v("id "+getItemId(p));
-			News item = data.items.get(p);
+			News item = data.get(p);
 
-			Utils.toggleView(h.likes, item.likes.can_like > 0);
-			Utils.toggleView(h.comments, item.comments.can_post > 0);
+			Utils.toggleView(h.likes, item.likesCanLike);
+			Utils.toggleView(h.comments, item.commentsCanPost);
 			Utils.toggleView(h.text, !TextUtils.isEmpty(item.text));
 			h.date.setText(DateUtils.getRelativeTimeSpanString(item.date * 1000));
-			h.comments.setText(String.valueOf(item.comments.count));
-			h.likes.setText(String.valueOf(item.likes.count));
-			h.reposts.setText(String.valueOf(item.reposts.count));
-			if (item.producer != null) {
-				h.title.setText(item.producer.getName());
-				picasso.load(item.producer.getThumb()).into(h.avatar);
+			h.comments.setText(String.valueOf(item.commentsCount));
+			h.likes.setText(String.valueOf(item.likesCount));
+			h.reposts.setText(String.valueOf(item.repostsCount));
+			if (item.getProducer() != null) {
+				h.title.setText(item.getProducer().getName());
+				picasso.load(item.getProducer().getThumb()).into(h.avatar);
 			}
 
 			// crop text
@@ -209,7 +231,7 @@ public class NewsFragment extends BaseFragment {
 				h.signer.setVisibility(View.GONE);
 			}
 
-			h.likes.setChecked(item.likes.user_likes > 0);
+			h.likes.setChecked(item.likesUserLikes);
 
 			h.mainImage.setVisibility(View.GONE);
 			h.linkContainer.setVisibility(View.GONE);
@@ -250,27 +272,25 @@ public class NewsFragment extends BaseFragment {
 
 		@Override
 		public int getItemCount() {
-			return data.items != null ? data.items.size() : 0;
+			return data != null ? data.size() : 0;
 		}
 
 
-		public void add(final NewsResponse newData) {
+		public void addToEnd(final List<News> newData) {
 			int total = getItemCount();
 			if (data != null) {
-				data.items.addAll(newData.items);
-				data.groups.addAll(newData.groups);
-				data.profiles.addAll(newData.profiles);
+				data.addAll(newData);
 			} else
 				data = newData;
 
-			notifyItemRangeInserted(total, newData.items.size());
+			notifyItemRangeInserted(total, newData.size());
 
 		}
 
 
 		@Override
 		public long getItemId(final int position) {
-			return data.items.get(position).post_id;
+			return data.get(position).post_id;
 		}
 
 
@@ -369,7 +389,7 @@ public class NewsFragment extends BaseFragment {
 
 
 			private News getItem() {
-				return data.items.get(getPosition());
+				return data.get(getPosition());
 			}
 
 		}
