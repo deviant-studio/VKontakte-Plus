@@ -6,7 +6,7 @@ import com.j256.ormlite.table.DatabaseTable;
 import ds.vkplus.db.extras.AndroidBaseDaoImpl;
 
 @DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
-public class Photo  extends BaseDaoEnabled {
+public class Photo extends BaseDaoEnabled {
 		/*id 	идентификатор фотографии.
 				положительное число
 		album_id 	идентификатор альбома, в котором находится фотография.
@@ -36,7 +36,7 @@ public class Photo  extends BaseDaoEnabled {
 		date 	дата добавления в формате unixtime.
 		положительное число*/
 
-	@DatabaseField(id=true)
+	@DatabaseField(id = true)
 	public long id;
 	@DatabaseField
 	public long album_id;
@@ -64,4 +64,7 @@ public class Photo  extends BaseDaoEnabled {
 	public String text;
 	@DatabaseField
 	public long date;
+
+	@DatabaseField(foreign = true)
+	public News news;
 }

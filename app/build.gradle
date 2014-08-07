@@ -112,5 +112,7 @@ dependencies {
     compile 'com.android.support:palette-v7:21.+'
     compile 'com.android.support:recyclerview-v7:21.+'
     compile 'com.j256.ormlite:ormlite-android:+'
-    //compile project(":vk_sdk")
+    compile('de.keyboardsurfer.android.widget:crouton:1.8.4@aar') {
+        exclude group: 'com.google.android', module: 'support-v4'
+    }
 }

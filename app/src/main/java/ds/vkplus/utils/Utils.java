@@ -1,5 +1,6 @@
 package ds.vkplus.utils;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -7,6 +8,9 @@ import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.View;
+import ds.vkplus.App;
+
+import java.util.List;
 
 public class Utils {
 
@@ -39,5 +43,21 @@ public class Utils {
 
 	public static void toggleView(final View v, final boolean visible) {
 		v.setVisibility(visible ? View.VISIBLE : View.GONE);
+	}
+
+	public static boolean isAppForeground() {
+		Context context = App.instance();
+		ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+		List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+		if (appProcesses == null) {
+			return false;
+		}
+		final String packageName = context.getPackageName();
+		for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+			if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && appProcess.processName.equals(packageName)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

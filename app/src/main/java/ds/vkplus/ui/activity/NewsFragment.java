@@ -9,9 +9,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -19,20 +17,24 @@ import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import ds.vkplus.App;
 import ds.vkplus.Constants;
-import ds.vkplus.Prefs;
 import ds.vkplus.R;
+import ds.vkplus.db.DBHelper;
 import ds.vkplus.eventbus.EventBus;
 import ds.vkplus.eventbus.events.ClickEvent;
 import ds.vkplus.model.Attachment;
 import ds.vkplus.model.News;
 import ds.vkplus.model.NewsResponse;
+import ds.vkplus.model.PostData;
 import ds.vkplus.network.RestService;
+import ds.vkplus.ui.Croutons;
 import ds.vkplus.ui.OnScrollBottomRecyclerViewListener;
+import ds.vkplus.ui.view.FillImageView;
 import ds.vkplus.utils.L;
 import ds.vkplus.utils.T;
 import ds.vkplus.utils.Utils;
 import rx.Subscriber;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NewsFragment extends BaseFragment {
@@ -61,19 +63,81 @@ public class NewsFragment extends BaseFragment {
 	@Override
 	public void onViewCreated(final View view, final Bundle savedInstanceState) {
 		ButterKnife.inject(this, view);
+		setHasOptionsMenu(true);
 
+		initList();
+		super.onViewCreated(view, savedInstanceState);
+	}
+
+	private void initList(){
 		recyclerView.setHasFixedSize(true);
 		recyclerView.setItemAnimator(new DefaultItemAnimator());
 		mLayoutManager = new LinearLayoutManager(getActivity());
 		recyclerView.setLayoutManager(mLayoutManager);
-		recyclerView.setOnScrollListener(new OnScrollBottomRecyclerViewListener((LinearLayoutManager) mLayoutManager, success -> loadMoreNews(getNext())));
+		recyclerView.setOnScrollListener(new OnScrollBottomRecyclerViewListener((LinearLayoutManager) mLayoutManager, lastPos -> loadMoreNews(getBottomNext(lastPos))));
+		adapter = new NewsRecyclerAdapter(new ArrayList<>());
+		recyclerView.setAdapter(adapter);
 
-		super.onViewCreated(view, savedInstanceState);
 	}
 
 
-	private String getNext() {
-		return Prefs.get().getString(Constants.KEY_NEXT, null);
+	@Override
+	public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		inflater.inflate(R.menu.news, menu);
+		MenuItem refresh = menu.findItem(R.id.refresh);
+		refresh.setVisible(hasNewPosts(getLatestNext()));
+	}
+
+
+	@Override
+	public boolean onOptionsItemSelected(final MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.refresh:
+				refresh();
+				break;
+			case R.id.force_refresh:
+				refresh();
+				break;
+			case R.id.action_settings:
+
+				break;
+
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+
+	private void refresh() {
+		toggleProgress(true);
+		initList();
+		rest.work(subscriber -> {
+			try {
+				DBHelper.instance().dropAll();
+				subscriber.onNext(true);
+				subscriber.onCompleted();
+			} catch (Exception e) {
+				e.printStackTrace();
+				subscriber.onError(e);
+			}
+		})
+		    .subscribe(res -> {
+			    toggleProgress(false);
+			    loadNews();
+		    }, e -> Croutons.prepare().message("Failed to drop database").show(getActivity()));
+
+	}
+
+
+	private PostData getBottomNext(int pos) {
+		long postId = adapter.getItemId(pos);
+		return DBHelper.instance().fetchNextByPostId(postId);
+	}
+
+
+	private PostData getLatestNext() {
+		return DBHelper.instance().fetchLatestNext();
+		//return Prefs.get().getString(Constants.KEY_NEXT, null);
 	}
 
 
@@ -82,8 +146,8 @@ public class NewsFragment extends BaseFragment {
 	}
 
 
-	private void loadMoreNews(final String next) {
-		rest.getNews2(next, PAGE_SIZE)
+	private void loadMoreNews(final PostData nextData) {
+		rest.getNews2(nextData, PAGE_SIZE)
 				//.subscribe(this::fillView, e -> T.show(getActivity(), "error getting news"));
 				.subscribe(new Subscriber<List<News>>() {
 
@@ -102,6 +166,7 @@ public class NewsFragment extends BaseFragment {
 					@Override
 					public void onError(final Throwable e) {
 						L.e("error catched in fragment");
+						Croutons.prepare().message("Loading Error").show(getActivity());
 						e.printStackTrace();
 						toggleProgress(false);
 					}
@@ -146,14 +211,25 @@ public class NewsFragment extends BaseFragment {
 		if (news.size() != 0)
 			empty.setVisibility(View.GONE);
 
-		L.v("next: " + getNext());
-		adapter = new NewsRecyclerAdapter(news);
-		recyclerView.setAdapter(adapter);
-		/*if (adapter == null) {
+		PostData nextData = getLatestNext();
+		L.v("next: " + nextData.nextRaw);
+		if (adapter == null) {
+			adapter = new NewsRecyclerAdapter(news);
+			recyclerView.setAdapter(adapter);
+		} else
+			adapter.addToEnd(news);
 
-		} else {
-			adapter.add(news);
-		}*/
+
+		// need invalidate refresh button
+		getActivity().invalidateOptionsMenu();
+	}
+
+
+	private boolean hasNewPosts(final PostData nextData) {
+		if (nextData == null)
+			return false;
+
+		return nextData.total < nextData.lastIndex;
 	}
 
 
@@ -173,6 +249,10 @@ public class NewsFragment extends BaseFragment {
 
 			case R.id.link:
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(e.url)));
+				break;
+
+			case R.id.likes:
+				T.show(getActivity(), "todo: like");
 				break;
 		}
 	}
@@ -204,8 +284,9 @@ public class NewsFragment extends BaseFragment {
 
 		@Override
 		public void onBindViewHolder(final Holder h, final int p) {
-			//L.v("id "+getItemId(p));
+			L.v("id " + getItemId(p));
 			News item = data.get(p);
+			L.v("attachments " + (item.attachments != null ? item.attachments.size() : -1));
 
 			Utils.toggleView(h.likes, item.likesCanLike);
 			Utils.toggleView(h.comments, item.commentsCanPost);
@@ -224,9 +305,9 @@ public class NewsFragment extends BaseFragment {
 			h.text.setText(item.isExpanded != null && !item.isExpanded ? item.text.substring(0, NewsResponse.POST_LENGTH_THRESHOLD) : item.text);
 
 			// fill signer if exist
-			if (item.signer != null) {
+			if (item.getSigner() != null) {
 				h.signer.setVisibility(View.VISIBLE);
-				h.signer.setText(item.signer.getName());
+				h.signer.setText(item.getSigner().getName());
 			} else {
 				h.signer.setVisibility(View.GONE);
 			}
@@ -238,10 +319,17 @@ public class NewsFragment extends BaseFragment {
 
 			if (item.attachments != null) {
 				for (Attachment a : item.attachments) {
+					L.v("attahcment type=" + a.type);
+					if (a.getContent() == null) {
+						L.e("attachment content is null!");
+					}
 					String imageUrl = null;
 					switch (a.type) {
 						case Attachment.TYPE_PHOTO:
 							imageUrl = a.photo.photo_604;
+							ViewGroup.LayoutParams lp = h.mainImage.getLayoutParams();
+							h.mainImage.setMinimumHeight(a.photo.height*(h.mainImage.getWidth()/a.photo.width));
+							//lp.height=(a.photo.height*(h.mainImage.getWidth()/a.photo.width));
 							break;
 						case Attachment.TYPE_VIDEO:
 							imageUrl = a.video.photo_640;
@@ -255,12 +343,14 @@ public class NewsFragment extends BaseFragment {
 							h.linkPrimary.setText(a.link.title);
 							h.linkSecondary.setText(a.link.url);
 							break;
-						default:
-							h.mainImage.setImageResource(R.drawable.ic_launcher);
+						default: {
+
+						}
 
 					}
 
 					if (!TextUtils.isEmpty(imageUrl)) {
+						L.v("img url=" + imageUrl);
 						h.mainImage.setVisibility(View.VISIBLE);
 						picasso.load(imageUrl).into(h.mainImage);
 					}
@@ -294,10 +384,15 @@ public class NewsFragment extends BaseFragment {
 		}
 
 
+		public News getItem(final int i) {
+			return data.get(i);
+		}
+
+
 		public class Holder extends RecyclerView.ViewHolder {
 
 			@InjectView(R.id.image)
-			public ImageView mainImage;
+			public FillImageView mainImage;
 			@InjectView(R.id.avatar)
 			public ImageView avatar;
 			@InjectView(R.id.text)

@@ -15,9 +15,9 @@ import java.sql.SQLException;
 abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	protected final static String DATABASE_NAME = "database.db";
-	protected final static int DATABASE_VERSION = 8;
+	protected final static int DATABASE_VERSION = 25;
 
-	private static Class[] classes = {
+	protected static Class[] classes = {
 			News.class,
 			Comment.class,
 			Attachment.class,
@@ -31,7 +31,9 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 			Poll.class,
 			PostedPhoto.class,
 			Profile.class,
-			Video.class
+			Video.class,
+			PostData.class,
+			PhotoPost.class
 	};
 
 	protected AndroidBaseDaoImpl<News, Integer> newsDao;
@@ -93,7 +95,7 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 		}
 
 		// recreating tables
-		onCreate(database,connectionSource);
+		onCreate(database, connectionSource);
 	}
 
 

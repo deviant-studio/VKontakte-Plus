@@ -6,12 +6,27 @@ import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.table.DatabaseTable;
 import ds.vkplus.db.DBHelper;
 import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import hugo.weaving.DebugLog;
 
 import java.sql.SQLException;
 import java.util.Collection;
 
 @DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
 public class News extends BaseDaoEnabled {
+
+	/*post — новые записи со стен
+	photo — новые фотографии
+	photo_tag — новые отметки на фотографиях
+	wall_photo — новые фотографии на стенах
+	friend — новые друзья
+	note — новые заметки*/
+
+	public static final String TYPE_POST = "post";
+	public static final String TYPE_PHOTO = "photo";
+	public static final String TYPE_PHOTO_TAG = "photo_tag";
+	public static final String TYPE_WALL_PHOTO = "wall_photo";
+	public static final String TYPE_FRIEND = "friend";
+	public static final String TYPE_NOTE = "note";
 
 	@DatabaseField
 	public String type;
@@ -31,19 +46,34 @@ public class News extends BaseDaoEnabled {
 	public News[] copy_history;
 	@ForeignCollectionField(eager = true)
 	public Collection<Attachment> attachments;
+	//@ForeignCollectionField(eager = true)
+	public VKList<Photo> photos;
+
+
+	@ForeignCollectionField(eager = true)
+	public Collection<Photo> photosPersist;
+
+
+/*	@ForeignCollectionField(eager = true)
+	public Collection<PhotoPost> photo_tags;*/
+
+	/*@ForeignCollectionField(eager = true)
+	public Collection<NotePost> notes;*/
+	/*@ForeignCollectionField(eager = true)
+	public Collection<FriendPost> friends;*/
 
 	public PostSource post_source;
 	public Comments comments;
 	public Likes likes;
 	public Reposts reposts;
+	public long id; // used in nested posts
 
 	// local stuff
 	private Producer producer;
-	public Producer signer;
-	public Boolean isExpanded;  // 3-state flag
+	private Producer signer;
 
 	@DatabaseField
-	public boolean nestedPost;
+	public Boolean isExpanded;  // 3-state flag
 	@DatabaseField
 	public int commentsCount;
 	@DatabaseField
@@ -61,7 +91,13 @@ public class News extends BaseDaoEnabled {
 	@DatabaseField
 	public boolean likesCanLike;
 
+	@DatabaseField(foreign = true)
+	public News parent;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	@DebugLog
 	public Producer getProducer() {
 		if (producer == null) {
 			try {
@@ -72,6 +108,20 @@ public class News extends BaseDaoEnabled {
 		}
 
 		return producer;
+	}
+
+
+	@DebugLog
+	public Producer getSigner() {
+		if (signer == null && signer_id != 0) {
+			try {
+				signer = DBHelper.instance().getProducerById(signer_id);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return signer;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

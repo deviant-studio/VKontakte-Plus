@@ -31,4 +31,7 @@ public class Link  extends BaseDaoEnabled {
 	public String preview_page;
 	@DatabaseField
 	public String preview_url;
+
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
+	Attachment attachment;
 }

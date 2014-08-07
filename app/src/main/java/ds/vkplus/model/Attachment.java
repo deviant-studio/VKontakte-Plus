@@ -46,23 +46,23 @@ public class Attachment extends BaseDaoEnabled {
 	@DatabaseField
 	public String type;
 
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Video video;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Photo photo;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public PostedPhoto posted_photo;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Audio audio;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true,foreignAutoCreate = true)
 	public Link link;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Album album;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Poll poll;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Document document;
-	@DatabaseField(foreign = true)
+	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Page page;
 	// ...
 

@@ -41,5 +41,10 @@
         <item name="android:layout_alignLeft">@+id/title</item>
     </style>
 
+    <style name="crouton_appearance">
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
 
 </resources>

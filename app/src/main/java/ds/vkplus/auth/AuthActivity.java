@@ -11,6 +11,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import ds.vkplus.Constants;
 import ds.vkplus.PrivateConstants;
+import ds.vkplus.network.RestService;
 import ds.vkplus.utils.L;
 
 import java.util.regex.Matcher;
@@ -23,7 +24,7 @@ public class AuthActivity extends AccountAuthenticatorActivity {
 			"scope=groups,friends,wall&" +
 			"redirect_uri=https://oauth.vk.com/blank.html&" +
 			"display=mobile&" +
-			"v=5.23&" +
+			"v=" + RestService.API_VERSION + "&" +
 			"response_type=token";
 
 	public static final Pattern PATTERN_TOKEN_URL = Pattern.compile("^https://oauth\\.vk\\.com/blank\\.html#access_token=(.+)&expires_in=(\\d+)&user_id=(\\d+)$");
