@@ -4,10 +4,10 @@ package ds.vkplus.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.table.DatabaseTable;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import ds.vkplus.db.extras.AndroidDao;
 
-@DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
-public class Link  extends BaseDaoEnabled {
+@DatabaseTable(daoClass = AndroidDao.class)
+public class Link extends BaseDaoEnabled {
 	/*url — адрес ссылки;
 	title — заголовок ссылки;
 	description — описание ссылки;
@@ -32,6 +32,6 @@ public class Link  extends BaseDaoEnabled {
 	@DatabaseField
 	public String preview_url;
 
-	@DatabaseField(foreign = true,foreignAutoRefresh = true)
+	@DatabaseField(foreign = true, foreignAutoRefresh = true)
 	Attachment attachment;
 }

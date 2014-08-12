@@ -3,6 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingBottom="12dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
     android:paddingTop="12dp">
 
     <ds.vkplus.ui.view.RoundImageView
@@ -34,25 +36,24 @@
             android:id="@+id/text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
             android:text="this is really long comment blab alb alb albaoishd oahsud oiuh qiuowdh ioquwh diuq hwdiuqh wdiuqhwoflulhiuhlku luka hwelfkuh alkusehf lkuawehf lkua flkuha lkwefuh"
             android:textColor="@color/dark"
             android:textSize="15sp" />
 
-        <ImageView
-            android:id="@+id/image"
+        <ds.vkplus.ui.view.FlowLayout
+            android:id="@+id/flow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:src="@drawable/ic_launcher"
-            android:visibility="gone" />
+            android:layout_marginLeft="-10dp"
+            android:layout_marginRight="-10dp"
+            android:layout_marginTop="10dp" />
 
         <include layout="@layout/item_link" />
 
     </LinearLayout>
 
-    <TextView
+    <CheckedTextView
         android:id="@+id/likes"
         style="@style/news_bottom_icon_text"
         android:layout_alignBaseline="@+id/date"

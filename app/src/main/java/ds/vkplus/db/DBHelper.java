@@ -2,12 +2,13 @@ package ds.vkplus.db;
 
 import android.content.Context;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.j256.ormlite.dao.BaseDaoImpl;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.table.TableUtils;
 import ds.vkplus.App;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import ds.vkplus.db.extras.AndroidDao;
 import ds.vkplus.model.*;
 import ds.vkplus.utils.L;
 import hugo.weaving.DebugLog;
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
 
 public class DBHelper extends DBHelperBase {
 
-	public static final Pattern NEXT_PATTERN = Pattern.compile("^(\\d+)/([-]?\\d+)_(\\d+)_\\d+$");
+	public static final Pattern NEXT_PATTERN = Pattern.compile("^(\\d+)/(-?\\d+)(?:_\\d+)?_(\\d+)_\\d+$");
 
 	//private static DBHelper instance;
 
@@ -61,7 +62,7 @@ public class DBHelper extends DBHelperBase {
 						saveNews(item, null);
 
 						if (item.copy_history != null) {
-							L.v("saveng nested post...");
+							L.v("saving nested post...");
 							for (News nested : item.copy_history) {
 								saveNews(nested, item);
 							}
@@ -88,35 +89,51 @@ public class DBHelper extends DBHelperBase {
 		if (item.post_type != null)
 			item.type = item.post_type;
 
-		if (item.type.equals(News.TYPE_POST)) {
-			if (item.text.length() > NewsResponse.POST_LENGTH_THRESHOLD) {
-				item.isExpanded = Boolean.FALSE;
-			}
+		if (parent != null) {
+			item.parent = parent;
+			item.post_id = item.id;
+			item.source_id = item.owner_id != 0 ? item.owner_id : item.from_id;
 
-			if (parent != null) {
-				item.parent = parent;
-				item.post_id=item.id;
+		}
 
-			} else {
-				item.likesCount = item.likes.count;
-				item.likesUserLikes = item.likes.user_likes > 0;
-				item.likesCanLike = item.likes.can_like > 0;
-				item.commentsCount = item.comments.count;
-				item.commentsCanPost = item.comments.can_post > 0;
-				item.repostsCount = item.reposts.count;
-			}
-		} else if (item.type.equals(News.TYPE_WALL_PHOTO)) {
-			item.post_id=item.date;
-			item.photosPersist = item.photos.items;
-			for (Photo p : item.photosPersist) {
-				p.news = item;    // important!
-				getDao(Photo.class).createOrUpdate(p);
-			}
-		} else if (item.type.equals(News.TYPE_PHOTO)) {
-			// todo
+		switch (item.type) {
+			case News.TYPE_POST:
+				/*if (item.text.length() > NewsResponse.POST_LENGTH_THRESHOLD) {
+					item.isExpanded = false;
+				}*/
+
+				//L.v("post text=%s isExpanded=%s", item.text, item.isExpanded);
+
+				if (parent == null) {
+					item.likesCount = item.likes.count;
+					item.likesUserLikes = item.likes.user_likes > 0;
+					item.likesCanLike = item.likes.can_like > 0;
+					item.commentsCount = item.comments.count;
+					item.commentsCanPost = item.comments.can_post > 0;
+					item.repostsCount = item.reposts.count;
+				}
+
+
+				break;
+
+			case News.TYPE_WALL_PHOTO:
+			case News.TYPE_PHOTO:
+				item.post_id = item.date;
+				if (item.photos != null) {
+					item.photosPersist = item.photos.items;
+					for (Photo p : item.photosPersist) {
+						p.news = item;    // important!
+						getDao(Photo.class).createOrUpdate(p);
+					}
+				}
+				break;
+
 		}
 
 		newsDao.createOrUpdate(item);
+
+
+		//L.v("isExpanded after fetch=%s", newsDao.queryForSameId(item).isExpanded);
 
 		//save attachments
 		if (item.attachments != null)
@@ -132,11 +149,13 @@ public class DBHelper extends DBHelperBase {
 		Matcher m = NEXT_PATTERN.matcher(next);
 		if (m.matches()) {
 			data.lastIndex = Integer.valueOf(m.group(1));
+		} else {
+			L.e("next doesnt match regex pattern");
 		}
 		data.postId = last.post_id;
 		data.postDate = last.date;
 		data.nextRaw = next;
-		data.fetchDate = System.currentTimeMillis() / 1000;
+		data.fetchDate = System.currentTimeMillis();
 		data.total = fetchNewsCount();
 		getDao(PostData.class).createOrUpdate(data);
 	}
@@ -144,9 +163,9 @@ public class DBHelper extends DBHelperBase {
 
 	public int fetchNewsCount() {
 		try {
-			return (int) newsDao.queryBuilder().where()
-			                    .isNull("parent_id")
-			                    .countOf();
+			return (int) newsDao.queryBuilder()//.where()
+					//.isNull("parent_id")
+					.countOf();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return 0;
@@ -194,7 +213,7 @@ public class DBHelper extends DBHelperBase {
 	}
 
 
-	private <T extends BaseDaoEnabled> void saveEntities(final Collection<T> list, AndroidBaseDaoImpl<T, Integer> dao) throws SQLException {
+	public <T extends BaseDaoEnabled> void saveEntities(final Collection<T> list, AndroidDao<T, Integer> dao) throws SQLException {
 		if (list == null || dao == null)
 			return;
 
@@ -261,8 +280,105 @@ public class DBHelper extends DBHelperBase {
 
 	public void dropAll() throws SQLException {
 		for (Class cls : classes) {
+			getDao(cls).clearObjectCache();
 			TableUtils.dropTable(connectionSource, cls, true);
 			TableUtils.createTable(connectionSource, cls);
+		}
+	}
+
+
+	public News fetchLatestPost() {
+		try {
+			return newsDao.queryBuilder()
+			              .orderBy("date", false)
+			              .where()
+			              .isNull("parent_id")
+			              .queryForFirst();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	public News fetchNewsById(final int id) {
+		try {
+			return newsDao.queryForId(id);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	public Video fetchVideo(final Integer id) {
+		Dao<Video, Integer> dao = getDao(Video.class);
+		try {
+			return dao.queryForId(id);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	public void saveVideo(final Video video) {
+		Dao<Video, Integer> dao = getDao(Video.class);
+		try {
+			dao.update(video);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+
+	}
+
+
+	public void saveCommentsResponse(final CommentsList comments) {
+		try {
+			saveEntities(comments.groups, getDao(Group.class));
+			saveEntities(comments.profiles, getDao(Profile.class));
+			saveComments(comments.items);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+
+	}
+
+
+	public void saveComments(final List<Comment> list) throws SQLException {
+		if (list == null)
+			return;
+		AndroidDao<Comment, Integer> dao = getDao(Comment.class);
+		dao.callBatchTasks(new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				for (Comment c : list) {
+					c.likesCount = c.likes.count;
+					c.likesUserLikes = c.likes.user_likes > 0;
+					dao.createOrUpdate(c);
+
+					if (c.attachments != null)
+						for (Attachment a : c.attachments) {
+							a.comment = c;    // important!
+							saveAttachment(a);
+						}
+				}
+				return null;
+			}
+		});
+
+	}
+
+
+	public Comment fetchCommentById(final int id) {
+		try {
+			return (Comment) ((BaseDaoImpl) getDao(Comment.class)).queryForId(id);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 }

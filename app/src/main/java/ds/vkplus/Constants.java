@@ -10,5 +10,6 @@ public class Constants {
 
 	public static final String KEY_POST_ID = "KEY_POST_ID";
 	public static final String KEY_OWNER_ID = "KEY_OWNER_ID";
-	public static final String KEY_NEXT = "KEY_NEXT";
+	//public static final String KEY_NEXT = "KEY_NEXT";
+	public static final String KEY_PHOTO_ID = "KEY_PHOTO_ID";
 }

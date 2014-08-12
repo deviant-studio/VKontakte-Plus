@@ -14,20 +14,20 @@ import com.j256.ormlite.table.DatabaseTableConfig;
 import java.sql.SQLException;
 import java.util.List;
 
-public class AndroidBaseDaoImpl<T, ID> extends BaseDaoImpl<T, ID> {
+public class AndroidDao<T, ID> extends BaseDaoImpl<T, ID> {
 
 
-	public AndroidBaseDaoImpl(Class<T> dataClass) throws SQLException {
+	public AndroidDao(Class<T> dataClass) throws SQLException {
 		super(dataClass);
 	}
 
 
-	public AndroidBaseDaoImpl(ConnectionSource connectionSource, Class<T> dataClass) throws SQLException {
+	public AndroidDao(ConnectionSource connectionSource, Class<T> dataClass) throws SQLException {
 		super(connectionSource, dataClass);
 	}
 
 
-	public AndroidBaseDaoImpl(ConnectionSource connectionSource, DatabaseTableConfig<T> tableConfig) throws SQLException {
+	public AndroidDao(ConnectionSource connectionSource, DatabaseTableConfig<T> tableConfig) throws SQLException {
 		super(connectionSource, tableConfig);
 	}
 

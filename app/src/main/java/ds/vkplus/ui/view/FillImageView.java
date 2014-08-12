@@ -1,6 +1,7 @@
 package ds.vkplus.ui.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
@@ -21,7 +22,7 @@ public class FillImageView extends ImageView {
 	}
 
 
-	@Override
+	/*@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		int width = MeasureSpec.getSize(widthMeasureSpec);
 		int height;
@@ -29,7 +30,13 @@ public class FillImageView extends ImageView {
 			height = width * getDrawable().getIntrinsicHeight() / getDrawable().getIntrinsicWidth();
 		} else
 			height = 0;
-		
+
 		setMeasuredDimension(width, height);
+	}*/
+
+
+	public void fill(int width, int height) {
+		Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.ALPHA_8);
+		setImageBitmap(b);
 	}
 }

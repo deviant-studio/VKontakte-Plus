@@ -56,7 +56,7 @@ public class Croutons {
 
 
 		public Builder message(int id) {
-			message = a.getString(id);
+			message = App.instance().getString(id);
 			return this;
 		}
 

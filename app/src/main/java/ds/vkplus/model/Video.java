@@ -3,10 +3,10 @@ package ds.vkplus.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.table.DatabaseTable;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import ds.vkplus.db.extras.AndroidDao;
 
-@DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
-public class Video  extends BaseDaoEnabled {
+@DatabaseTable(daoClass = AndroidDao.class)
+public class Video extends BaseDaoEnabled<Video, Integer> {
 		/*id	идентификатор видеозаписи.
 				положительное число
 		owner_id	идентификатор владельца видеозаписи.
@@ -35,7 +35,7 @@ public class Video  extends BaseDaoEnabled {
 		плеер всегда масштабируется по размеру окна.
 				строка*/
 
-	@DatabaseField(id=true)
+	@DatabaseField(id = true)
 	public long id;
 	@DatabaseField
 	public long owner_id;
@@ -57,4 +57,19 @@ public class Video  extends BaseDaoEnabled {
 	public int duration;
 	@DatabaseField
 	public long date;
+	@DatabaseField
+	public String access_key;
+
+	/*{
+			"id":169960108,
+			"owner_id":-38854900,
+			"title":"Как российские ",
+			"duration":293,
+			"description":"",
+			"date":1407752827,
+			"views":2513,
+			"comments":51,
+			"photo_130":"http:\/\/cs619624.vk.me\/u13455651\/video\/s_72bc3e95.jpg",
+			"photo_320":"http:\/\/cs619624.vk.me\/u13455651\/video\/l_98527e42.jpg",
+			"player":"http:\/\/www.youtube.com\/embed\/jU1pXagKJ_w"}]}*/
 }

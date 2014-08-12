@@ -115,4 +115,7 @@ dependencies {
     compile('de.keyboardsurfer.android.widget:crouton:1.8.4@aar') {
         exclude group: 'com.google.android', module: 'support-v4'
     }
+    compile ('com.mcxiaoke.photoview:library:1.2.3'){
+        exclude group: 'com.google.android', module: 'support-v4'
+    }
 }

@@ -5,13 +5,12 @@ import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.table.DatabaseTable;
 import ds.vkplus.db.DBHelper;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
-import hugo.weaving.DebugLog;
+import ds.vkplus.db.extras.AndroidDao;
 
 import java.sql.SQLException;
 import java.util.Collection;
 
-@DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
+@DatabaseTable(daoClass = AndroidDao.class)
 public class News extends BaseDaoEnabled {
 
 	/*post — новые записи со стен
@@ -43,7 +42,8 @@ public class News extends BaseDaoEnabled {
 	@DatabaseField
 	public long signer_id;
 
-	public News[] copy_history;
+	@ForeignCollectionField(eager = true/*, maxEagerLevel = 2*/)
+	public Collection<News> copy_history;
 	@ForeignCollectionField(eager = true)
 	public Collection<Attachment> attachments;
 	//@ForeignCollectionField(eager = true)
@@ -67,13 +67,15 @@ public class News extends BaseDaoEnabled {
 	public Likes likes;
 	public Reposts reposts;
 	public long id; // used in nested posts
+	public long owner_id;   // --
+	public long from_id;
 
 	// local stuff
 	private Producer producer;
 	private Producer signer;
 
-	@DatabaseField
-	public Boolean isExpanded;  // 3-state flag
+	//@DatabaseField
+	public boolean isExpanded;
 	@DatabaseField
 	public int commentsCount;
 	@DatabaseField
@@ -92,12 +94,14 @@ public class News extends BaseDaoEnabled {
 	public boolean likesCanLike;
 
 	@DatabaseField(foreign = true)
-	public News parent;
+	public transient News parent;
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	@DebugLog
+	//@DebugLog
 	public Producer getProducer() {
 		if (producer == null) {
 			try {
@@ -111,7 +115,7 @@ public class News extends BaseDaoEnabled {
 	}
 
 
-	@DebugLog
+	//@DebugLog
 	public Producer getSigner() {
 		if (signer == null && signer_id != 0) {
 			try {
@@ -122,6 +126,13 @@ public class News extends BaseDaoEnabled {
 		}
 
 		return signer;
+	}
+
+
+	@Override
+	public String toString() {
+		final String result = String.format("text=%s postId=%s", text, post_id);
+		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

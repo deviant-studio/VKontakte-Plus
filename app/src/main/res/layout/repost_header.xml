@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+    android:id="@+id/repost_header"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:orientation="horizontal">
+
+    <View
+        android:id="@+id/repost_divider"
+        android:layout_width="2dp"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:background="@color/app_color"
+
+        android:layout_alignBottom="@+id/repost_avatar" />
+
+    <ds.vkplus.ui.view.RoundImageView
+        android:id="@+id/repost_avatar"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/ic_action_content_picture"
+        android:layout_toRightOf="@+id/repost_divider" />
+
+    <TextView
+        android:id="@+id/repost_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_toRightOf="@+id/repost_avatar"
+        android:fontFamily="sans-serif-condensed"
+        android:text="Card Title"
+        android:textColor="@color/dark"
+        android:textSize="16sp" />
+
+
+    <TextView
+        android:id="@+id/repost_date"
+        style="@style/date_text"
+        android:text="20 june 2014"
+        android:layout_below="@+id/repost_title"
+        android:layout_alignLeft="@+id/repost_title" />
+
+
+</RelativeLayout>

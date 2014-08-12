@@ -1,15 +1,19 @@
 package ds.vkplus.ui.activity;
 
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.DisplayMetrics;
 import android.view.*;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
 import android.widget.*;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -21,25 +25,30 @@ import ds.vkplus.R;
 import ds.vkplus.db.DBHelper;
 import ds.vkplus.eventbus.EventBus;
 import ds.vkplus.eventbus.events.ClickEvent;
-import ds.vkplus.model.Attachment;
-import ds.vkplus.model.News;
-import ds.vkplus.model.NewsResponse;
-import ds.vkplus.model.PostData;
+import ds.vkplus.eventbus.events.UrlClickEvent;
+import ds.vkplus.model.*;
 import ds.vkplus.network.RestService;
 import ds.vkplus.ui.Croutons;
 import ds.vkplus.ui.OnScrollBottomRecyclerViewListener;
-import ds.vkplus.ui.view.FillImageView;
+import ds.vkplus.ui.view.FixedSizeImageView;
+import ds.vkplus.ui.view.FlowLayout;
+import ds.vkplus.ui.view.LayoutUtils;
 import ds.vkplus.utils.L;
 import ds.vkplus.utils.T;
 import ds.vkplus.utils.Utils;
+import rx.Observable;
 import rx.Subscriber;
+import rx.android.observables.AndroidObservable;
+import rx.android.schedulers.AndroidSchedulers;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class NewsFragment extends BaseFragment {
 
-	private static final int PAGE_SIZE = 10;
+	private static final int PAGE_SIZE = 100;
 
 	@InjectView(R.id.list)
 	RecyclerView recyclerView;
@@ -48,10 +57,14 @@ public class NewsFragment extends BaseFragment {
 	TextView empty;
 
 
-	String token;
+	//String token;
 	//String next;
-	NewsRecyclerAdapter adapter;
+	private NewsRecyclerAdapter adapter;
 	private RecyclerView.LayoutManager mLayoutManager;
+	private Observable<Integer> postsChecker;
+	private Subscriber<Integer> postsCountSubscriber;
+	//private int newPosts;
+
 
 
 	@Override
@@ -66,17 +79,77 @@ public class NewsFragment extends BaseFragment {
 		setHasOptionsMenu(true);
 
 		initList();
+
+		loadNews();
+
+		runCountChecker();
+
 		super.onViewCreated(view, savedInstanceState);
 	}
 
-	private void initList(){
+
+
+
+	private void runCountChecker() {
+		postsCountSubscriber = new Subscriber<Integer>() {
+			@Override
+			public void onCompleted() { }
+
+
+			@Override
+			public void onError(final Throwable e) {
+				L.e("failed to get count");
+				e.printStackTrace();
+			}
+
+
+			@Override
+			public void onNext(final Integer count) {
+				L.v("new posts: " + count);
+				//newPosts = count;
+				refreshButton.setNotificationsCount(count);
+				//getActivity().invalidateOptionsMenu();
+			}
+		};
+		postsChecker = rest.work(subscriber -> {
+			L.v("postsChecker call");
+				rest.getNewPostsCount().subscribe(val -> {
+					subscriber.onNext(val);
+					subscriber.onCompleted();
+				}, e -> {
+					L.e("failed to get count");
+					e.printStackTrace();
+					subscriber.onError(e);
+				});
+		});
+		AndroidObservable.bindFragment(this, postsChecker);
+		postsChecker.repeat().observeOn(AndroidSchedulers.mainThread()).subscribe(postsCountSubscriber);
+
+	}
+
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		if (!postsCountSubscriber.isUnsubscribed())
+			postsCountSubscriber.unsubscribe();
+	}
+
+
+	private void initList() {
 		recyclerView.setHasFixedSize(true);
-		recyclerView.setItemAnimator(new DefaultItemAnimator());
+		//recyclerView.setItemAnimator(new SlideInFromLeftItemAnimator(getView()));
 		mLayoutManager = new LinearLayoutManager(getActivity());
 		recyclerView.setLayoutManager(mLayoutManager);
-		recyclerView.setOnScrollListener(new OnScrollBottomRecyclerViewListener((LinearLayoutManager) mLayoutManager, lastPos -> loadMoreNews(getBottomNext(lastPos))));
-		adapter = new NewsRecyclerAdapter(new ArrayList<>());
-		recyclerView.setAdapter(adapter);
+		RecyclerView.OnScrollListener scrollListener = new OnScrollBottomRecyclerViewListener((LinearLayoutManager) mLayoutManager,
+				lastPos -> loadMoreNews(getBottomNext(lastPos)));
+		recyclerView.setOnScrollListener(scrollListener);
+		if (adapter == null) {
+			adapter = new NewsRecyclerAdapter(new ArrayList<>(), (OnScrollBottomRecyclerViewListener) scrollListener);
+			recyclerView.setAdapter(adapter);
+		} else
+			adapter.setItems(new ArrayList<>());
 
 	}
 
@@ -85,20 +158,17 @@ public class NewsFragment extends BaseFragment {
 	public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
 		inflater.inflate(R.menu.news, menu);
-		MenuItem refresh = menu.findItem(R.id.refresh);
-		refresh.setVisible(hasNewPosts(getLatestNext()));
+		/*MenuItem refresh = menu.findItem(R.id.refresh);
+		refresh.setVisible(newPosts > 0);*/
 	}
 
 
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		switch (item.getItemId()) {
-			case R.id.refresh:
-				refresh();
-				break;
-			case R.id.force_refresh:
-				refresh();
-				break;
+			/*case R.id.force_refresh:
+				onRefresh();
+				break;*/
 			case R.id.action_settings:
 
 				break;
@@ -107,8 +177,8 @@ public class NewsFragment extends BaseFragment {
 		return super.onOptionsItemSelected(item);
 	}
 
-
-	private void refresh() {
+	@Override
+	protected void onRefresh() {
 		toggleProgress(true);
 		initList();
 		rest.work(subscriber -> {
@@ -122,14 +192,14 @@ public class NewsFragment extends BaseFragment {
 			}
 		})
 		    .subscribe(res -> {
-			    toggleProgress(false);
+			    //toggleProgress(false);
 			    loadNews();
 		    }, e -> Croutons.prepare().message("Failed to drop database").show(getActivity()));
-
 	}
 
 
 	private PostData getBottomNext(int pos) {
+		L.v("next pos=" + pos);
 		long postId = adapter.getItemId(pos);
 		return DBHelper.instance().fetchNextByPostId(postId);
 	}
@@ -166,8 +236,8 @@ public class NewsFragment extends BaseFragment {
 					@Override
 					public void onError(final Throwable e) {
 						L.e("error catched in fragment");
-						Croutons.prepare().message("Loading Error").show(getActivity());
 						e.printStackTrace();
+						Croutons.prepare().message("Loading Error").show(getActivity());
 						toggleProgress(false);
 					}
 
@@ -186,25 +256,9 @@ public class NewsFragment extends BaseFragment {
 
 	@Override
 	protected void onLoggedIn(String token) {
-		this.token = token;
-		loadNews();
+		//this.token = token;
+		//loadNews();
 	}
-
-
-/*	private void fillView(final NewsResponse news) {
-		if (news.items.size() != 0)
-			empty.setVisibility(View.GONE);
-
-		next = news.next_from;
-		L.v("next: " + news.next_from);
-		if (adapter == null) {
-			adapter = new NewsRecyclerAdapter(news);
-			recyclerView.setAdapter(adapter);
-
-		} else {
-			adapter.add(news);
-		}
-	}*/
 
 
 	private void fillView(final List<News> news) {
@@ -213,23 +267,11 @@ public class NewsFragment extends BaseFragment {
 
 		PostData nextData = getLatestNext();
 		L.v("next: " + nextData.nextRaw);
-		if (adapter == null) {
-			adapter = new NewsRecyclerAdapter(news);
-			recyclerView.setAdapter(adapter);
-		} else
-			adapter.addToEnd(news);
-
+		adapter.addToEnd(news);
 
 		// need invalidate refresh button
-		getActivity().invalidateOptionsMenu();
-	}
-
-
-	private boolean hasNewPosts(final PostData nextData) {
-		if (nextData == null)
-			return false;
-
-		return nextData.total < nextData.lastIndex;
+		//newPosts = 0;
+		//getActivity().invalidateOptionsMenu();
 	}
 
 
@@ -252,32 +294,55 @@ public class NewsFragment extends BaseFragment {
 				break;
 
 			case R.id.likes:
-				T.show(getActivity(), "todo: like");
+
 				break;
 		}
+	}
+
+
+	@Subscribe
+	public void onUrlClickEvent(UrlClickEvent e) {
+		startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(e.urls.get(0))));
 	}
 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	public static class NewsRecyclerAdapter extends RecyclerView.Adapter<NewsRecyclerAdapter.Holder> {
+	public static class NewsRecyclerAdapter extends RecyclerView.Adapter<Holder> {
 
+		private Point displaySize;
 		private List<News> data;
-		Picasso picasso;
+		private Picasso picasso;
+		private long initTime;
+		protected static final long ANIM_DEFAULT_SPEED = 1000L;
+		protected int previousPostition;
+		protected OnScrollBottomRecyclerViewListener scrollListener;
+		protected long animDuration;
+		protected Interpolator interpolator;
 
 
-		private NewsRecyclerAdapter(List<News> data) {
+		private NewsRecyclerAdapter(List<News> data, OnScrollBottomRecyclerViewListener sl) {
 			this.data = data;
 			picasso = Picasso.with(App.instance());
 			setHasStableIds(true);
+
+			// anim init
+			initTime = System.currentTimeMillis();
+			scrollListener = sl;
+			previousPostition = -1;
+			interpolator = new DecelerateInterpolator();
+			WindowManager wm = (WindowManager) App.instance().getSystemService(Context.WINDOW_SERVICE);
+			displaySize = new Point();
+			wm.getDefaultDisplay().getSize(displaySize);
+			//
 		}
 
 
 		@Override
 		public Holder onCreateViewHolder(final ViewGroup parent, final int i) {
 			View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_post, parent, false);
-			Holder h = new Holder(v);
+			Holder h = new Holder(v, this);
 			return h;
 		}
 
@@ -286,11 +351,8 @@ public class NewsFragment extends BaseFragment {
 		public void onBindViewHolder(final Holder h, final int p) {
 			L.v("id " + getItemId(p));
 			News item = data.get(p);
-			L.v("attachments " + (item.attachments != null ? item.attachments.size() : -1));
+			//L.v("attachments " + (item.attachments != null ? item.attachments.size() : -1));
 
-			Utils.toggleView(h.likes, item.likesCanLike);
-			Utils.toggleView(h.comments, item.commentsCanPost);
-			Utils.toggleView(h.text, !TextUtils.isEmpty(item.text));
 			h.date.setText(DateUtils.getRelativeTimeSpanString(item.date * 1000));
 			h.comments.setText(String.valueOf(item.commentsCount));
 			h.likes.setText(String.valueOf(item.likesCount));
@@ -300,9 +362,6 @@ public class NewsFragment extends BaseFragment {
 				picasso.load(item.getProducer().getThumb()).into(h.avatar);
 			}
 
-			// crop text
-			Utils.toggleView(h.expand, item.isExpanded != null && !item.isExpanded);
-			h.text.setText(item.isExpanded != null && !item.isExpanded ? item.text.substring(0, NewsResponse.POST_LENGTH_THRESHOLD) : item.text);
 
 			// fill signer if exist
 			if (item.getSigner() != null) {
@@ -314,8 +373,35 @@ public class NewsFragment extends BaseFragment {
 
 			h.likes.setChecked(item.likesUserLikes);
 
-			h.mainImage.setVisibility(View.GONE);
 			h.linkContainer.setVisibility(View.GONE);
+
+			// fill repost data
+			if (item.copy_history != null && item.copy_history.size() > 0) {
+				h.repostHeader.setVisibility(View.VISIBLE);
+				News repost = item.copy_history.iterator().next();
+				h.repostTitle.setText(repost.getProducer().getName());
+				h.repostDate.setText(DateUtils.getRelativeTimeSpanString(repost.date * 1000));
+				picasso.load(repost.getProducer().getThumb()).into(h.repostAvatar);
+				item.text = repost.text;
+				//item.isExpanded = repost.isExpanded;
+				//L.v("repost: "+repost.text);
+				item.attachments = repost.attachments;
+			} else {
+				h.repostHeader.setVisibility(View.GONE);
+			}
+
+			// crop text
+			String text = item.text;
+			boolean collapsed = text != null && text.length() > NewsResponse.POST_LENGTH_THRESHOLD + 20 && !item.isExpanded;
+			Utils.toggleView(h.expand, collapsed);
+			h.text.setText(collapsed ? text.substring(0, NewsResponse.POST_LENGTH_THRESHOLD) : text);
+			//}
+
+			Utils.toggleView(h.text, !TextUtils.isEmpty(item.text));
+			Utils.toggleView(h.likes, item.likesCanLike);
+			Utils.toggleView(h.comments, item.commentsCanPost);
+
+			List<PhotoData> photos = new ArrayList<>();
 
 			if (item.attachments != null) {
 				for (Attachment a : item.attachments) {
@@ -327,21 +413,36 @@ public class NewsFragment extends BaseFragment {
 					switch (a.type) {
 						case Attachment.TYPE_PHOTO:
 							imageUrl = a.photo.photo_604;
-							ViewGroup.LayoutParams lp = h.mainImage.getLayoutParams();
-							h.mainImage.setMinimumHeight(a.photo.height*(h.mainImage.getWidth()/a.photo.width));
-							//lp.height=(a.photo.height*(h.mainImage.getWidth()/a.photo.width));
+							photos.add(new PhotoData(imageUrl, a.photo.width, a.photo.height, PhotoData.TYPE_PHOTO, a.photo.id));
 							break;
+
 						case Attachment.TYPE_VIDEO:
-							imageUrl = a.video.photo_640;
+							imageUrl = Observable.from(a.video.photo_640, a.video.photo_320, a.video.photo_130).toBlocking().first(pic -> pic != null);
+							PhotoData pd = new PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_VIDEO, a.video.id);
+							photos.add(pd);
 							break;
+
 						case Attachment.TYPE_POSTED_PHOTO:
 							imageUrl = a.posted_photo.photo_604;
+							photos.add(new PhotoData(imageUrl, 0, 0, PhotoData.TYPE_PHOTO, a.posted_photo.id));
 							break;
+
 						case Attachment.TYPE_LINK:
-							//imageUrl = a.link.image_src;
+							imageUrl = a.link.image_src;
+							if (imageUrl != null && photos.size() == 0) {
+								PhotoData pd2 = new PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_LINK, 0);
+								pd2.urlBigger = a.link.url;
+								photos.add(pd2);
+							}
 							h.linkContainer.setVisibility(View.VISIBLE);
 							h.linkPrimary.setText(a.link.title);
 							h.linkSecondary.setText(a.link.url);
+							break;
+
+						case Attachment.TYPE_PAGE:
+							h.linkContainer.setVisibility(View.VISIBLE);
+							h.linkPrimary.setText(a.page.title);
+							h.linkSecondary.setText(h.linkContainer.getContext().getString(R.string.page));
 							break;
 						default: {
 
@@ -349,14 +450,123 @@ public class NewsFragment extends BaseFragment {
 
 					}
 
-					if (!TextUtils.isEmpty(imageUrl)) {
-						L.v("img url=" + imageUrl);
-						h.mainImage.setVisibility(View.VISIBLE);
-						picasso.load(imageUrl).into(h.mainImage);
-					}
+
 				}
+
 			}
 
+			for (Photo photo : item.photosPersist) {
+				photos.add(new PhotoData(photo.photo_604, photo.width, photo.height, PhotoData.TYPE_PHOTO, photo.id));
+			}
+
+			if (photos.size() != 0) {
+				h.flow.setVisibility(View.VISIBLE);
+				loadImages(h.flow, h.getViewsCache(), photos, getItemId(p));
+			} else
+				h.flow.setVisibility(View.GONE);
+
+			// animation
+			View v = h.card;
+			if (initTime + 500 < System.currentTimeMillis() && p > previousPostition) {
+				int speed = (int) toDips(v.getContext(), scrollListener.getSpeed());
+				Utils.dp(v.getContext(), scrollListener.getSpeed());
+
+				animDuration = (long) (ANIM_DEFAULT_SPEED / (speed / 10f + 1));
+
+				L.v("speed=%s", speed);
+				v.setTranslationY(Utils.dp(v.getContext(), 200));
+				/*v.setRotationX(40.0F);
+				v.setScaleX(0.8F);
+				v.setScaleY(0.55F);
+*/
+				ViewPropertyAnimator a = v.animate()
+						.translationY(0)
+				                          /*.rotationX(0.0F)
+				                          .rotationY(0.0F)
+				                          .scaleX(1.0F)
+				                          .scaleY(1.0F)*/
+						.setDuration(animDuration)
+						.setInterpolator(interpolator);
+					/*if (Build.VERSION.SDK_INT >= 16)
+						a.withLayer();*/
+
+				a.start();
+			}
+
+			previousPostition = p;
+
+		}
+
+
+		public static void loadImages(final FlowLayout flow, Iterator<View> imagesIterator, final List<PhotoData> photos, long itemId) {
+			//L.v("item id "+itemId);
+			flow.removeAllViews();
+			Utils.toggleView(flow, photos.size() != 0);
+			DisplayMetrics displayMetrics = App.instance().getResources().getDisplayMetrics();
+			int n = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance(), 28);
+			LayoutUtils.processThumbs(n, n, photos);
+
+			if (photos.size() != 0) {
+				for (PhotoData photo : photos) {
+					FixedSizeImageView img;
+					if (imagesIterator.hasNext())
+						img = (FixedSizeImageView) imagesIterator.next();
+					else {
+						L.e("cache is empty. creating view manually...");
+						img = new FixedSizeImageView(flow.getContext());
+					}
+					img.displayW = photo.width;
+					img.displayH = photo.height;
+					ImageView.ScaleType scaleType = ImageView.ScaleType.CENTER_CROP;// : ImageView.ScaleType.FIT_CENTER;
+					img.setScaleType(scaleType);
+					img.toggleVideoIcon(photo.type == PhotoData.TYPE_VIDEO);
+					//L.v("w=%s h=%s b=%s f=%s", photo.width, photo.height, photo.breakAfter, photo.floating);
+					FlowLayout.LayoutParams lp = new FlowLayout.LayoutParams(Utils.dp(App.instance(), 2), Utils.dp(App.instance(), /*photo.paddingBottom ? 10 : */2));
+					if (photo.breakAfter || photo.floating) {
+						lp.breakAfter = photo.breakAfter;
+						lp.floating = photo.floating;
+					}
+
+					img.setLayoutParams(lp);
+					flow.addView(img);
+					Picasso.with(flow.getContext()).load(photo.url).placeholder(img.placeholder).into(img);
+					img.setOnClickListener(v -> {
+						if (photo.type == PhotoData.TYPE_PHOTO) {
+							Intent i = new Intent(v.getContext(), PhotosActivity.class);
+							i.putExtra(Constants.KEY_POST_ID, itemId);
+							i.putExtra(Constants.KEY_PHOTO_ID, photo.id);
+							v.getContext().startActivity(i);
+						} else if (photo.type == PhotoData.TYPE_VIDEO) {
+							openVideo(v.getContext(), photo.id);
+						} else if (photo.type == PhotoData.TYPE_LINK) {
+							L.v("link click");
+							String url = photo.urlBigger;
+							if (url.startsWith("http"))
+								EventBus.post(new UrlClickEvent(Collections.singletonList(url)));
+						}
+					});
+				}
+
+			}
+		}
+
+
+		private static void openVideo(Context c, final long id) {
+			Video v = DBHelper.instance().fetchVideo((int) id);
+			Observable<String> videoRequest = RestService.get().getVideo(v);
+			videoRequest.subscribe(result -> {
+				//T.show(App.instance(), "Success");
+				c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(result)));
+			}, e -> {
+				T.show(App.instance(), "Fail!");
+				e.printStackTrace();
+			});
+
+		}
+
+
+		private float toDips(Context ctx, float px) {
+			return px / ctx.getResources().getDisplayMetrics().density;
 		}
 
 
@@ -369,9 +579,11 @@ public class NewsFragment extends BaseFragment {
 		public void addToEnd(final List<News> newData) {
 			int total = getItemCount();
 			if (data != null) {
+				if (data.size() == 0)
+					initTime = System.currentTimeMillis();
 				data.addAll(newData);
 			} else
-				data = newData;
+				data = new ArrayList<>(newData);
 
 			notifyItemRangeInserted(total, newData.size());
 
@@ -389,104 +601,159 @@ public class NewsFragment extends BaseFragment {
 		}
 
 
-		public class Holder extends RecyclerView.ViewHolder {
-
-			@InjectView(R.id.image)
-			public FillImageView mainImage;
-			@InjectView(R.id.avatar)
-			public ImageView avatar;
-			@InjectView(R.id.text)
-			public TextView text;
-			@InjectView(R.id.title)
-			public TextView title;
-			@InjectView(R.id.likes)
-			public CheckedTextView likes;
-			@InjectView(R.id.comments)
-			public CheckedTextView comments;
-			@InjectView(R.id.reposts)
-			public CheckedTextView reposts;
-			@InjectView(R.id.date)
-			public TextView date;
-			@InjectView(R.id.signer)
-			public TextView signer;
-			@InjectView(R.id.link_primary)
-			public TextView linkPrimary;
-			@InjectView(R.id.link_secondary)
-			public TextView linkSecondary;
-			@InjectView(R.id.expand)
-			public TextView expand;
-			@InjectView(R.id.link)
-			public View linkContainer;
-			@InjectView(R.id.overflow)
-			public ImageView overflow;
+		public void setItems(final List<News> list) {
+			data = list;
+			notifyDataSetChanged();
+		}
 
 
-			public Holder(final View v) {
-				super(v);
-				ButterKnife.inject(this, v);
+	}
 
-				comments.setOnClickListener(this::onClick);
-				text.setOnClickListener(this::onTextClick);
-				expand.setOnClickListener(this::onTextClick);
-				likes.setOnClickListener(this::onClick);
-				comments.setOnClickListener(this::onClick);
-				reposts.setOnClickListener(this::onClick);
-				mainImage.setOnClickListener(this::onClick);
-				linkContainer.setOnClickListener(this::onLinkClick);
 
-				overflow.setOnClickListener(view -> {
-					ListPopupWindow popup = new ListPopupWindow(view.getContext());
-					popup.setAnchorView(view);
-					popup.setContentWidth(Utils.dp(view.getContext(), 200));
+	public static class Holder extends RecyclerView.ViewHolder {
 
-					popup.setAdapter(ArrayAdapter.createFromResource(view.getContext(), R.array.overflow_items, android.R.layout.simple_list_item_1));
-					popup.setOnItemClickListener((parent, view2, position, id) -> {
-						switch (position) {
-							case 0: // debug
-								L.v("item=" + RestService.get().gson.toJson(getItem()));
-								break;
-							case 1:
+		/*@InjectView(R.id.image)
+		public FillImageView mainImage;*/
+		@InjectView(R.id.avatar)
+		public ImageView avatar;
+		@InjectView(R.id.repost_avatar)
+		public ImageView repostAvatar;
+		@InjectView(R.id.text)
+		public TextView text;
+		@InjectView(R.id.title)
+		public TextView title;
+		@InjectView(R.id.repost_title)
+		public TextView repostTitle;
+		@InjectView(R.id.repost_date)
+		public TextView repostDate;
+		@InjectView(R.id.likes)
+		public CheckedTextView likes;
+		@InjectView(R.id.comments)
+		public CheckedTextView comments;
+		@InjectView(R.id.reposts)
+		public CheckedTextView reposts;
+		@InjectView(R.id.date)
+		public TextView date;
+		@InjectView(R.id.signer)
+		public TextView signer;
+		@InjectView(R.id.link_primary)
+		public TextView linkPrimary;
+		@InjectView(R.id.link_secondary)
+		public TextView linkSecondary;
+		@InjectView(R.id.expand)
+		public TextView expand;
+		@InjectView(R.id.link)
+		public View linkContainer;
+		@InjectView(R.id.overflow)
+		public ImageView overflow;
+		@InjectView(R.id.header)
+		public View header;
+		@InjectView(R.id.repost_header)
+		public View repostHeader;
+		@InjectView(R.id.card)
+		public View card;
+		@InjectView(R.id.flow)
+		public FlowLayout flow;
 
-								break;
-						}
-						popup.dismiss();
-					});
-					popup.show();
+		private NewsRecyclerAdapter adapter;
+		private List<View> cache;
+
+
+		public Holder(final View v, NewsRecyclerAdapter a) {
+			super(v);
+			ButterKnife.inject(this, v);
+			adapter = a;
+
+			comments.setOnClickListener(this::onClick);
+			text.setOnClickListener(this::onTextClick);
+			expand.setOnClickListener(this::onTextClick);
+			likes.setOnClickListener(this::onLikeClick);
+			comments.setOnClickListener(this::onClick);
+			reposts.setOnClickListener(this::onClick);
+			//mainImage.setOnClickListener(this::onClick);
+			linkContainer.setOnClickListener(this::onLinkClick);
+			title.setOnClickListener(title -> {
+				L.v("data size=%s pos=%s", adapter.data.size(), getPosition());
+			});
+
+			overflow.setOnClickListener(view -> {
+				ListPopupWindow popup = new ListPopupWindow(view.getContext());
+				popup.setAnchorView(view);
+				popup.setContentWidth(Utils.dp(view.getContext(), 200));
+
+				popup.setAdapter(ArrayAdapter.createFromResource(view.getContext(), R.array.overflow_items, android.R.layout.simple_list_item_1));
+				popup.setOnItemClickListener((parent, view2, position, id) -> {
+					switch (position) {
+						case 0: // debug
+							L.v("item=" + getItem().toString());
+							break;
+						case 1:
+
+							break;
+					}
+					popup.dismiss();
 				});
-			}
+				popup.show();
+			});
+		}
 
 
-			private void onLinkClick(final View view) {
-				String url = linkSecondary.getText().toString();
-				if (url.startsWith("http"))
-					EventBus.post(new ClickEvent(url, view.getId()));
-				else
-					T.show(view.getContext(), "Not implemented yet");
+		private void onLikeClick(final View view) {
+			News item = getItem();
+			RestService.get().likePost(item.post_id, item.source_id, !item.likesUserLikes).subscribe(likes -> {
+				//T.show(getActivity(), "done");
+				item.likesCount = likes.likes;
+				item.likesUserLikes = !item.likesUserLikes;
+				adapter.notifyItemChanged(getPosition());
+			}, err -> T.show(view.getContext(), view.getContext().getString(R.string.fail)));
 
-			}
+		}
 
 
-			private void onTextClick(final View view) {
-				News i = getItem();
-				if (i.isExpanded != null) {
-					i.isExpanded = !i.isExpanded;
-					notifyItemChanged(getPosition());
-					//text.setMaxLines(i.isExpanded ? 0 : POST_MAX_LINES);
-					//Utils.toggleView(expand, !i.isExpanded);
+		private void onLinkClick(final View view) {
+			String url = linkSecondary.getText().toString();
+			if (url.startsWith("http"))
+				EventBus.post(new UrlClickEvent(Collections.singletonList(url)));
+			else
+				T.show(view.getContext(), "Not implemented yet");
+
+		}
+
+
+		private void onTextClick(final View view) {
+
+			News i = getItem();
+			L.v("text click %s isExpand=%s", getPosition(), i.isExpanded);
+			//L.v(RestService.get().gson.toJson(i));
+			//if (i.isExpanded != null) {
+			L.v("notify");
+			i.isExpanded = !i.isExpanded;
+			adapter.notifyItemChanged(getPosition());
+			//notifyDataSetChanged();
+			//onBindViewHolder(this, getPosition());
+			//}
+		}
+
+
+		private void onClick(final View view) {
+			L.v("%s %s", getItemId(), getPosition());
+			EventBus.post(new ClickEvent(getItem(), view.getId()));
+		}
+
+
+		private News getItem() {
+			return adapter.data.get(getPosition());
+		}
+
+
+		public Iterator<View> getViewsCache() {
+			if (cache == null) {
+				cache = new ArrayList<>();
+				for (int i = 0; i <= 10; i++) {
+					cache.add(new FixedSizeImageView(flow.getContext()));
 				}
 			}
-
-
-			private void onClick(final View view) {
-				L.v("%s %s", getItemId(), getPosition());
-				EventBus.post(new ClickEvent(getItem(), view.getId()));
-			}
-
-
-			private News getItem() {
-				return data.get(getPosition());
-			}
-
+			return cache.iterator();
 		}
 	}
 }

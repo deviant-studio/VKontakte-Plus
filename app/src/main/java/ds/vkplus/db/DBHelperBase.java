@@ -6,7 +6,7 @@ import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import ds.vkplus.db.extras.AndroidDao;
 import ds.vkplus.model.*;
 import ds.vkplus.utils.L;
 
@@ -15,7 +15,7 @@ import java.sql.SQLException;
 abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	protected final static String DATABASE_NAME = "database.db";
-	protected final static int DATABASE_VERSION = 25;
+	protected final static int DATABASE_VERSION = 28;
 
 	protected static Class[] classes = {
 			News.class,
@@ -36,10 +36,10 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 			PhotoPost.class
 	};
 
-	protected AndroidBaseDaoImpl<News, Integer> newsDao;
-	protected AndroidBaseDaoImpl<Attachment, Integer> attachmentsDao;
-	protected AndroidBaseDaoImpl<Profile, Integer> profilesDao;
-	protected AndroidBaseDaoImpl<Group, Integer> groupsDao;
+	protected AndroidDao<News, Integer> newsDao;
+	protected AndroidDao<Attachment, Integer> attachmentsDao;
+	protected AndroidDao<Profile, Integer> profilesDao;
+	protected AndroidDao<Group, Integer> groupsDao;
 
 
 	public DBHelperBase(final Context context) {

@@ -3,9 +3,9 @@ package ds.vkplus.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.table.DatabaseTable;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import ds.vkplus.db.extras.AndroidDao;
 
-@DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
+@DatabaseTable(daoClass = AndroidDao.class)
 public class Album extends BaseDaoEnabled {
 
 		/*id — идентификатор альбома;

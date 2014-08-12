@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="ds.vkplus">
+<manifest
+    package="ds.vkplus"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -18,7 +19,6 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".ui.activity.MainActivity"
             android:label="@string/app_name">
@@ -28,25 +28,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".auth.AuthActivity"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait" />
+        <activity android:name=".ui.activity.CommentsActivity" />
 
-        <activity
-            android:name=".ui.activity.CommentsActivity"
-             />
-
-      <!--  <service
+        <!--
+            <service
             android:name=".RestServiceOld"
             android:enabled="true"
-            android:exported="false"/>-->
+            android:exported="false"/>
+        -->
 
         <service
             android:name=".auth.AccountAuthenticatorService"
-            android:process=":auth"
-            >
+            android:process=":auth">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -55,6 +52,11 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
+
+        <activity
+            android:name=".ui.activity.PhotosActivity"
+            android:label="@string/title_activity_photos"
+            android:theme="@style/PhotosTheme" />
 
     </application>
 

@@ -21,7 +21,7 @@ public class AuthActivity extends AccountAuthenticatorActivity {
 
 	public static final String AUTH_URL = "https://oauth.vk.com/authorize?" +
 			"client_id=" + PrivateConstants.VK_APP_ID + "&" +
-			"scope=groups,friends,wall&" +
+			"scope=groups,friends,wall,video,audio,pages,messages&" +
 			"redirect_uri=https://oauth.vk.com/blank.html&" +
 			"display=mobile&" +
 			"v=" + RestService.API_VERSION + "&" +

@@ -22,4 +22,21 @@
         <item name="android:textSize">20sp</item>
     </style>
 
+
+    <style name="PhotosTheme" parent="android:Theme.Holo">
+        <item name="android:actionBarStyle">@style/DarkActionBar</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:actionBarItemBackground">@drawable/card_selector</item>
+        <item name="android:listChoiceBackgroundIndicator">@drawable/card_selector</item>
+    </style>
+
+    <style name="DarkActionBar" parent="android:Widget.Holo.ActionBar.Solid">
+        <item name="android:background">@color/dark</item>
+        <item name="android:backgroundSplit">@color/dark</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitle</item>
+        <item name="android:logo">@drawable/logo</item>
+        <item name="android:actionBarDivider">@null</item>
+    </style>
+
+
 </resources>

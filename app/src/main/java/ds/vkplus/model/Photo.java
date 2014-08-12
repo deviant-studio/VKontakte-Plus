@@ -3,9 +3,11 @@ package ds.vkplus.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.table.DatabaseTable;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import ds.vkplus.db.extras.AndroidDao;
+import rx.Observable;
 
-@DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
+
+@DatabaseTable(daoClass = AndroidDao.class)
 public class Photo extends BaseDaoEnabled {
 		/*id 	идентификатор фотографии.
 				положительное число
@@ -67,4 +69,9 @@ public class Photo extends BaseDaoEnabled {
 
 	@DatabaseField(foreign = true)
 	public News news;
+
+
+	public String getBiggestPhoto() {
+		return Observable.from(photo_2560, photo_1280, photo_807, photo_604).toBlocking().first(val -> val != null);
+	}
 }

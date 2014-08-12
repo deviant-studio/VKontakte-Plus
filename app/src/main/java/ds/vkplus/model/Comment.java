@@ -3,11 +3,13 @@ package ds.vkplus.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
-import ds.vkplus.db.extras.AndroidBaseDaoImpl;
+import ds.vkplus.db.DBHelper;
+import ds.vkplus.db.extras.AndroidDao;
 
+import java.sql.SQLException;
 import java.util.Collection;
 
-@DatabaseTable(daoClass = AndroidBaseDaoImpl.class)
+@DatabaseTable(daoClass = AndroidDao.class)
 public class Comment {
 
 	/*id	идентификатор комментария.
@@ -45,6 +47,18 @@ public class Comment {
 	@DatabaseField
 	public boolean likesUserLikes;
 
-	public Producer producer;
+	private Producer producer;
+
+	public Producer getProducer() {
+		if (producer == null) {
+			try {
+				producer = DBHelper.instance().getProducerById(from_id);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return producer;
+	}
 
 }

@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <android.support.v7.widget.CardView
-    android:id="@+id/card_view"
+    android:id="@+id/card"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginLeft="8dp"
     android:layout_marginRight="8dp"
     android:layout_marginTop="10dp"
-    card_view:cardCornerRadius="0dp"
-    >
+    app:cardCornerRadius="0dp">
 
 
     <LinearLayout
@@ -19,7 +18,7 @@
         android:animateLayoutChanges="true"
         android:background="@drawable/card_selector"
         android:orientation="vertical"
-        android:padding="10dp">
+        android:layout_margin="10dp">
 
         <RelativeLayout
             android:id="@+id/header"
@@ -67,12 +66,12 @@
             android:layout_marginTop="5dp"
             android:background="@color/gray2" />
 
+        <include layout="@layout/repost_header"/>
 
         <TextView
             android:id="@+id/text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
             android:layout_marginTop="12dp"
             android:text="aiosjd oiaj sdoi jaosd"
             android:textColor="@color/dark"
@@ -82,20 +81,21 @@
             android:id="@+id/expand"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:layout_marginTop="-10dp"
             android:text="@string/more_"
             android:textColor="@color/gray1"
             android:textSize="15sp" />
 
-        <ds.vkplus.ui.view.FillImageView
-            android:id="@+id/image"
+
+        <ds.vkplus.ui.view.FlowLayout
+            android:id="@+id/flow"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="-10dp"
+            android:layout_marginRight="-10dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:adjustViewBounds="true"
-            android:background="@color/gray2"
-            />
+            android:layout_height="wrap_content">
+
+
+        </ds.vkplus.ui.view.FlowLayout>
 
         <include layout="@layout/item_link" />
 
@@ -103,6 +103,7 @@
             android:id="@+id/signer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:drawableLeft="@drawable/ic_action_social_person"
             android:fontFamily="sans-serif-condensed"
             android:gravity="center_vertical"
@@ -132,8 +133,8 @@
 
             <CheckedTextView
                 android:id="@+id/likes"
-                android:checked="true"
                 style="@style/news_bottom_icon_text"
+                android:checked="true"
                 android:text="+5" />
 
         </LinearLayout>

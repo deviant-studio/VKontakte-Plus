@@ -45,6 +45,7 @@ public class Utils {
 		v.setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
 
+
 	public static boolean isAppForeground() {
 		Context context = App.instance();
 		ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -59,5 +60,10 @@ public class Utils {
 			}
 		}
 		return false;
+	}
+
+
+	public static boolean isMainThread() {
+		return (Looper.myLooper() == Looper.getMainLooper());
 	}
 }

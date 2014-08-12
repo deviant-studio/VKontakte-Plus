@@ -15,7 +15,7 @@ public class OrmliteCursorLoader<T> extends AsyncTaskLoader<Cursor> {
     final ForceLoadContentObserver mObserver;
 
     private Cursor mCursor;
-    private AndroidBaseDaoImpl<T, ?> mDao;
+    private AndroidDao<T, ?> mDao;
     private PreparedQuery<T> mQuery;
     
 
@@ -68,7 +68,7 @@ public class OrmliteCursorLoader<T> extends AsyncTaskLoader<Cursor> {
         }
     }
 
-    public OrmliteCursorLoader(Context context, AndroidBaseDaoImpl<T,?> dao, PreparedQuery<T> query) {
+    public OrmliteCursorLoader(Context context, AndroidDao<T,?> dao, PreparedQuery<T> query) {
         super(context);
         mObserver = new ForceLoadContentObserver();
         mDao = dao;
