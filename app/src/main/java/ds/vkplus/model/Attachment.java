@@ -61,7 +61,7 @@ public class Attachment extends BaseDaoEnabled {
 	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Poll poll;
 	@DatabaseField(foreign = true,foreignAutoRefresh = true)
-	public Document document;
+	public Document doc;
 	@DatabaseField(foreign = true,foreignAutoRefresh = true)
 	public Page page;
 	// ...
@@ -81,7 +81,7 @@ public class Attachment extends BaseDaoEnabled {
 			case TYPE_AUDIO:
 				return (T) audio;
 			case TYPE_DOC:
-				return (T) document;
+				return (T) doc;
 			case TYPE_GRAFFITI:
 				return null;    // todo
 			case TYPE_LINK:

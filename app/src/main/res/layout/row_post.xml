@@ -75,7 +75,7 @@
             android:layout_marginTop="12dp"
             android:text="aiosjd oiaj sdoi jaosd"
             android:textColor="@color/dark"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/expand"
@@ -83,7 +83,7 @@
             android:layout_height="wrap_content"
             android:text="@string/more_"
             android:textColor="@color/gray1"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
 
 
         <ds.vkplus.ui.view.FlowLayout

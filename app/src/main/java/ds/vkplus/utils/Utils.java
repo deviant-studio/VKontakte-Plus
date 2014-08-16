@@ -3,6 +3,8 @@ package ds.vkplus.utils;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -93,5 +95,13 @@ public class Utils {
 		} else {
 			L.w("call startTimer() first");
 		}
+	}
+
+
+	public static boolean isWifi() {
+		Context context = App.instance();
+		ConnectivityManager mgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = mgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		return networkInfo != null && networkInfo.isConnected();
 	}
 }

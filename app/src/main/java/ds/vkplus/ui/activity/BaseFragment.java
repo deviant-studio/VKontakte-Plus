@@ -22,6 +22,7 @@ abstract public class BaseFragment extends Fragment {
 		ab.setCustomView(refreshButton);
 		ab.setDisplayShowCustomEnabled(true);
 		refreshButton.setOnClickListener(v->onRefresh());
+		//setRetainInstance(true);
 	}
 
 

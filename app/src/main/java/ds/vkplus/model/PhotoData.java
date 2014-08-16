@@ -15,7 +15,7 @@ public class PhotoData {
 	public boolean breakAfter;
 	public boolean floating;
 	public boolean paddingBottom;
-	public String urlBigger;
+	public String extra;
 
 
 	public PhotoData(final String url, final int width, final int height, final int t, final long id) {
@@ -30,7 +30,7 @@ public class PhotoData {
 
 	public PhotoData(final String url, final String urlBig, final long id) {
 		this.url = url;
-		urlBigger = urlBig;
+		extra = urlBig;
 		this.id = id;
 	}
 

@@ -20,7 +20,7 @@ import static ds.vkplus.model.Filter.TYPE_COMMENTS;
 abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	protected final static String DATABASE_NAME = "database.db";
-	protected final static int DATABASE_VERSION = 35;
+	protected final static int DATABASE_VERSION = 36;
 
 	protected static Class[] classes = {
 			News.class,

@@ -21,6 +21,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".ui.activity.MainActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,14 +33,9 @@
             android:name=".auth.AuthActivity"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait" />
-        <activity android:name=".ui.activity.CommentsActivity" />
-
-        <!--
-            <service
-            android:name=".RestServiceOld"
-            android:enabled="true"
-            android:exported="false"/>
-        -->
+        <activity
+            android:name=".ui.activity.CommentsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
 
         <service
             android:name=".auth.AccountAuthenticatorService"

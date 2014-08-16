@@ -5,6 +5,7 @@ import ds.vkplus.model.ApiResponse;
 public class VKException extends RuntimeException {
 
 	public static final int CODE_UNKNOWN = -1;
+	public static final int CODE_NETWORK = -2;
 	public static final int CODE_TOKEN_OBSOLETED = 5;
 
 	public int code;

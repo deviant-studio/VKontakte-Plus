@@ -63,7 +63,7 @@ public class NewsFragment extends BaseFragment {
 	private RecyclerView.LayoutManager mLayoutManager;
 	private Observable<Integer> postsChecker;
 	private Subscriber<Integer> postsCountSubscriber;
-	//private int newPosts;
+	private int lastPosition;
 
 
 	@Override
@@ -73,7 +73,7 @@ public class NewsFragment extends BaseFragment {
 
 
 	@Override
-	public void onViewCreated(final View view, final Bundle savedInstanceState) {
+	public void onViewCreated(final View view, final Bundle b) {
 		ButterKnife.inject(this, view);
 		setHasOptionsMenu(true);
 
@@ -83,7 +83,10 @@ public class NewsFragment extends BaseFragment {
 
 		runCountChecker();
 
-		super.onViewCreated(view, savedInstanceState);
+		/*if (b != null)
+			lastPosition = b.getInt("position");*/
+
+		super.onViewCreated(view, b);
 	}
 
 
@@ -163,6 +166,16 @@ public class NewsFragment extends BaseFragment {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+
+
+	/*@Override
+	public void onSaveInstanceState(final Bundle outState) {
+		super.onSaveInstanceState(outState);
+		if (mLayoutManager != null) {
+			int pos = ((LinearLayoutManager) mLayoutManager).findFirstVisibleItemPosition();
+			outState.putInt("position", pos);
+		}
+	}*/
 
 
 	@Override
@@ -257,9 +270,11 @@ public class NewsFragment extends BaseFragment {
 		L.v("next: " + nextData.nextRaw);
 		adapter.addToEnd(news);
 
-		// need invalidate refresh button
-		//newPosts = 0;
-		//getActivity().invalidateOptionsMenu();
+		/*if (lastPosition != 0) {
+			recyclerView.scrollToPosition(lastPosition);
+			lastPosition = 0;
+		}*/
+
 	}
 
 
@@ -420,12 +435,19 @@ public class NewsFragment extends BaseFragment {
 							imageUrl = a.link.image_src;
 							if (imageUrl != null && photos.size() == 0) {
 								PhotoData pd2 = new PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_LINK, 0);
-								pd2.urlBigger = a.link.url;
+								pd2.extra = a.link.url;
 								photos.add(pd2);
 							}
 							h.linkContainer.setVisibility(View.VISIBLE);
 							h.linkPrimary.setText(a.link.title);
 							h.linkSecondary.setText(a.link.url);
+							break;
+
+						case Attachment.TYPE_DOC:
+							imageUrl = a.doc.photo_130;
+							PhotoData pd2 = new PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_LINK, 0);
+							pd2.extra = a.doc.url;
+							photos.add(pd2);
 							break;
 
 						case Attachment.TYPE_PAGE:
@@ -450,7 +472,9 @@ public class NewsFragment extends BaseFragment {
 
 			if (photos.size() != 0) {
 				h.flow.setVisibility(View.VISIBLE);
-				loadImages(h.flow, h.getViewsCache(), photos, getItemId(p));
+				DisplayMetrics displayMetrics = App.instance().getResources().getDisplayMetrics();
+				int size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance(), 28);
+				loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(p));
 			} else
 				h.flow.setVisibility(View.GONE);
 
@@ -460,7 +484,7 @@ public class NewsFragment extends BaseFragment {
 				int speed = (int) toDips(v.getContext(), scrollListener.getSpeed());
 				Utils.dp(v.getContext(), scrollListener.getSpeed());
 
-				animDuration = (long) (ANIM_DEFAULT_SPEED / (speed / 10f + 1));
+				animDuration = (long) (ANIM_DEFAULT_SPEED / (Math.max(speed, 0) / 10f + 1));
 
 				L.v("speed=%s", speed);
 				v.setTranslationY(Utils.dp(v.getContext(), 200));
@@ -477,13 +501,11 @@ public class NewsFragment extends BaseFragment {
 		}
 
 
-		public static void loadImages(final FlowLayout flow, Iterator<View> imagesIterator, final List<PhotoData> photos, long itemId) {
+		public static void loadImages(int size, final FlowLayout flow, Iterator<View> imagesIterator, final List<PhotoData> photos, long itemId) {
 			//L.v("item id "+itemId);
 			flow.removeAllViews();
 			Utils.toggleView(flow, photos.size() != 0);
-			DisplayMetrics displayMetrics = App.instance().getResources().getDisplayMetrics();
-			int n = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance(), 28);
-			LayoutUtils.processThumbs(n, n, photos);
+			LayoutUtils.processThumbs(size, size, photos);
 
 			if (photos.size() != 0) {
 				for (PhotoData photo : photos) {
@@ -520,7 +542,7 @@ public class NewsFragment extends BaseFragment {
 							openVideo(v.getContext(), photo.id);
 						} else if (photo.type == PhotoData.TYPE_LINK) {
 							L.v("link click");
-							String url = photo.urlBigger;
+							String url = photo.extra;
 							if (url.startsWith("http"))
 								EventBus.post(new UrlClickEvent(Collections.singletonList(url)));
 						}

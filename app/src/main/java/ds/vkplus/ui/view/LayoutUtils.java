@@ -3,6 +3,7 @@ package ds.vkplus.ui.view;
 import ds.vkplus.App;
 import ds.vkplus.model.PhotoData;
 import ds.vkplus.utils.L;
+import ds.vkplus.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,8 +84,8 @@ public class LayoutUtils {
 				width = areaWidth;
 				height = areaHeight;
 			} else {
-				width = 320.0f;
-				height = 210.0f;
+				width = Utils.dp(App.instance(),240);
+				height = Utils.dp(App.instance(),160);
 			}
 			final float areaRatio = width / height;
 			if (size == 1) {

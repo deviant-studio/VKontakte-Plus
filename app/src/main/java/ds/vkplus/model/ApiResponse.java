@@ -1,6 +1,7 @@
 package ds.vkplus.model;
 
 import com.google.gson.Gson;
+import ds.vkplus.exception.VKException;
 
 final public class ApiResponse<T> {
 
@@ -11,6 +12,13 @@ final public class ApiResponse<T> {
 	@Override
 	public String toString() {
 		return new Gson().toJson(this);
+	}
+
+
+	public static ApiResponse generateError() {
+		ApiResponse errorResponse = new ApiResponse();
+		errorResponse.error = new Error(VKException.CODE_NETWORK, "Retrofit error");
+		return errorResponse;
 	}
 
 

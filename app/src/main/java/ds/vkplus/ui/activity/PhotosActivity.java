@@ -132,7 +132,7 @@ public class PhotosActivity extends Activity {
 			PhotoView photoView = new PhotoView(container.getContext());
 			//photoView.setBackgroundColor(Color.BLACK);
 			String url = data.get(position).url;
-			final String big = data.get(position).urlBigger;
+			final String big = data.get(position).extra;
 
 			Observable.create((Subscriber<? super Bitmap> s) -> {
 				try {

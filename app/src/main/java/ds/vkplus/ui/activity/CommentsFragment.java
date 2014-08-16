@@ -1,6 +1,8 @@
 package ds.vkplus.ui.activity;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -15,6 +17,7 @@ import ds.vkplus.R;
 import ds.vkplus.actionprovider.FilterActionProvider;
 import ds.vkplus.db.DBHelper;
 import ds.vkplus.eventbus.events.FilterEvent;
+import ds.vkplus.eventbus.events.UrlClickEvent;
 import ds.vkplus.model.*;
 import ds.vkplus.model.Filter;
 import ds.vkplus.ui.OnScrollBottomListener;
@@ -269,7 +272,11 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 						adapter.notifyDataSetChanged();
 					}, e -> T.show(getActivity(), getString(R.string.fail)));
 					break;
-				case 1: // reply
+				case 1: // share
+					T.show(getActivity(), "share not implemented yet");
+					break;
+
+				case 2: // reply
 					T.show(getActivity(), "reply not implemented yet");
 					break;
 			}
@@ -277,6 +284,12 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 		});
 		popup.show();
 
+	}
+
+
+	@Subscribe
+	public void onUrlClickEvent(UrlClickEvent e) {
+		startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(e.urls.get(0))));
 	}
 
 
@@ -357,6 +370,12 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 							h.linkSecondary.setText(a.link.url);
 							h.link.setOnClickListener(clicked -> Utils.openURL(a.link.url));
 							break;
+						case Attachment.TYPE_DOC:
+							imageUrl = a.doc.photo_130;
+							PhotoData pd2 = new PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_LINK, 0);
+							pd2.extra = a.doc.url;
+							photos.add(pd2);
+							break;
 						case Attachment.TYPE_PAGE:
 							h.link.setVisibility(View.VISIBLE);
 							h.linkPrimary.setText(a.page.title);
@@ -371,7 +390,10 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 
 				}
 
-				NewsFragment.NewsRecyclerAdapter.loadImages(h.flow, h.getViewsCache(), photos, getItemId(position));
+				int size=-1;
+				/*DisplayMetrics displayMetrics = App.instance().getResources().getDisplayMetrics();
+				size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance(), 28) / 8;*/
+				NewsFragment.NewsRecyclerAdapter.loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(position));
 
 				// clicks
 
