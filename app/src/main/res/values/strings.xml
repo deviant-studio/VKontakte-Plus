@@ -2,12 +2,14 @@
 <resources>
 
     <array name="overflow_items">
+        <item>Share</item>
         <item>Debug</item>
     </array>
 
     <array name="comment_popup_items">
         <item>Like</item>
         <item>Reply</item>
+        <item>Share</item>
         <!--<item>Like</item>-->
     </array>
 
@@ -23,5 +25,6 @@
     <string name="title_activity_photos">Photos</string>
     <string name="hello_world">Hello world!</string>
     <string name="fail">Fail!</string>
+    <string name="filter">Filter</string>
 
 </resources>

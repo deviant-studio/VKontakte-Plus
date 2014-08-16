@@ -19,5 +19,13 @@ final public class ApiResponse<T> {
 		public int error_code;
 		public String error_msg;
 
+
+		public Error() {}
+
+
+		public Error(final int error_code, final String error_msg) {
+			this.error_code = error_code;
+			this.error_msg = error_msg;
+		}
 	}
 }

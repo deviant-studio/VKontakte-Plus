@@ -90,7 +90,7 @@ android {
         // Set the severity of the given issues to warning
         //warning 'ResourceAsColor'
         // Set the severity of the given issues to ignore (same as disabling the check)
-        //ignore 'TypographyQuotes'
+        ignore 'GradleDynamicVersion'
     }
 }
 
@@ -107,7 +107,7 @@ dependencies {
     compile 'com.googlecode.android-query:android-query:+'
     compile 'com.jakewharton:butterknife:+'
     compile 'com.squareup.okhttp:okhttp-urlconnection:+'
-    //compile 'com.android.support:support-v4:21.+'
+    //compile 'com.android.support:appcompat-v7:20.+'
     compile 'com.android.support:cardview-v7:21.+'
     compile 'com.android.support:palette-v7:21.+'
     compile 'com.android.support:recyclerview-v7:21.+'

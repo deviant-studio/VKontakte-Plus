@@ -1,6 +1,5 @@
 package ds.vkplus.network;
 
-import android.app.Activity;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ds.vkplus.auth.AccountHelper;
@@ -16,6 +15,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.ReplaySubject;
+import rx.subjects.Subject;
 
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -74,13 +74,13 @@ public class RestService {
 
 	private RequestInterceptor getInterceptor() {
 		return request -> {
-			request.addQueryParam("access_token", token);
+			request.addQueryParam("access_token", AccountHelper.getInstance().peekToken());
 			request.addQueryParam("v", API_VERSION);
 		};
 	}
 
 
-	public Observable<String> login(Activity a) {
+/*	public Observable<String> login(Activity a) {
 		return work(s -> {
 			try {
 				token = AccountHelper.getInstance().getToken(a);
@@ -91,15 +91,6 @@ public class RestService {
 				s.onError(e);
 			}
 		});
-		//return login;
-	}
-
-
-/*	public <T> Observable<T> runWithAuth(Activity a, Observable<T> o) {
-		final ReplaySubject<T> result = ReplaySubject.create();
-		login(a).doOnCompleted(() -> o.subscribe(result))
-		        .doOnError(Throwable::printStackTrace);
-		return result;
 	}*/
 
 
@@ -110,60 +101,98 @@ public class RestService {
 	}
 
 
-	private <K> Observable<K> networker(final Observable<ApiResponse<K>> request) {
+/*	private <K> Observable<K> networker(final Observable<ApiResponse<K>> request) {
 		ReplaySubject<K> result = ReplaySubject.create();
-		//Observable<K> helper = ReplaySubject.create((Subscriber<? super K> subscriber) -> {
-		//L.v("start helper observable");
-		request.subscribe(new Subscriber<ApiResponse<K>>() {
-			@Override
-			public void onCompleted() {
-				result.onCompleted();
-			}
+		request.subscribe(new NetworkerSubscriber<>(request, result));
+		return result;
+	}*/
 
 
-			@Override
-			public void onError(final Throwable e) {
-				L.e("retrofit error");
-				e.printStackTrace();
-			}
+	private <K> Observable<K> networker(final Observable<ApiResponse<K>> request) {
 
-
-			@Override
-			public void onNext(final ApiResponse<K> response) {
-				L.v("networker onNext");
-				if (response.error != null) {
-					L.w("found error");
-					switch (response.error.error_code) {
-						case VKException.CODE_TOKEN_OBSOLETED:
-							try {
-								token = AccountHelper.getInstance().refreshToken();
-								L.v("done refresh token. repeating request...");
-								request.retry();
-								return;
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-								result.onError(new VKException());
-							}
-							break;
-						default:
-							result.onError(new VKException(response.error));
+		return request
+				.map(obj -> {
+					if (obj.error != null) {
+						throw new VKException(obj.error);
+					} else {
+						return obj.response;
 					}
-					result.onError(new VKException(response.error));
-				} else {
-					L.v("found response");
-					result.onNext(response.response);
-
-				}
-			}
-		});
-
-		//});
-
-		//helper.subscribe(result);
-
-		return result/*helper*/;
+				})
+				.retry((count, e) -> {
+					L.v("onRetry");
+					if (e instanceof VKException && ((VKException) e).code == VKException.CODE_TOKEN_OBSOLETED) {
+						try {
+							AccountHelper.getInstance().refreshToken();
+							return true;
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+					return false;
+				})
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread());
 
 	}
+
+
+	private static class NetworkerSubscriber<K> extends Subscriber<ApiResponse<K>> {
+
+		Subject result;
+		Observable<ApiResponse<K>> request;
+
+
+		public NetworkerSubscriber(Observable request, Subject result) {
+			this.request = request;
+			this.result = result;
+		}
+
+
+		@Override
+		public void onCompleted() {
+			result.onCompleted();
+		}
+
+
+		@Override
+		public void onError(final Throwable e) {
+			L.e("retrofit error");
+			e.printStackTrace();
+		}
+
+
+		@Override
+		public void onNext(final ApiResponse<K> response) {
+			L.v("networker onNext");
+			if (response.error != null) {
+				L.w("found error");
+				switch (response.error.error_code) {
+					case VKException.CODE_TOKEN_OBSOLETED:
+						try {
+							//token = AccountHelper.getInstance().refreshToken();
+							L.v("done refresh token. repeating request...");
+							AccountHelper.getInstance().refreshToken();
+							request.subscribe(new NetworkerSubscriber<K>(request, result));
+							return;
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+							result.onError(new VKException());
+						}
+						break;
+					default:
+						result.onError(new VKException(response.error));
+				}
+				result.onError(new VKException(response.error));
+			} else {
+				L.v("found response");
+				result.onNext(response.response);
+
+			}
+		}
+	}
+
+
+	;
 
 
 	public static RestService get() {
@@ -265,19 +294,14 @@ public class RestService {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			} while (needMore);
+			} while (needMore && !subscriber.isUnsubscribed());
 			subscriber.onCompleted();
 		};
 
-		/*PublishSubject<CommentsList> subject=PublishSubject.create();
-		Observable.timer(1,TimeUnit.SECONDS).subscribe(val->{
-
-		})
-		;*/
 		ReplaySubject<List<Comment>> result = ReplaySubject.create();
 		Observable<CommentsList> o = Observable.create(onSubscribe)
-		                                       .subscribeOn(Schedulers.io())
-		                                       .delay(commentsList -> Observable.from(commentsList).delay(1, TimeUnit.SECONDS));
+		                                       .subscribeOn(Schedulers.io());
+		//.delay(commentsList -> Observable.from(commentsList).delay(1, TimeUnit.SECONDS));
 		o.subscribe(new Subscriber<CommentsList>() {
 			@Override
 			public void onCompleted() {
@@ -295,8 +319,12 @@ public class RestService {
 			@Override
 			public void onNext(final CommentsList comments) {
 				L.v("is main thread=" + Utils.isMainThread());
-				db.saveCommentsResponse(comments);
-				result.onNext(comments.items);
+				db.saveCommentsResponse(comments, postId);
+				long dateFrom = comments.items.get(0).date;
+				long dateTo = comments.items.get(comments.items.size() - 1).date;
+				final List<Filter> filters=db.filtersDao.fetchActiveFilters(Filter.TYPE_COMMENTS);
+				List<Comment> fetched = db.fetchComments(postId, dateFrom, dateTo, filters);
+				result.onNext(fetched);
 			}
 		});
 
@@ -304,42 +332,27 @@ public class RestService {
 	}
 
 
+	/*public Observable<List<Comment>> getAllComments2(final long postId, final long ownerId) {
+		boolean needMore = true;
+		int offset = 0;
+		int count = 10;
+		Observable request = networker(restApi.getComments(postId, ownerId, offset, count));
+
+		restApi.getComments().map()
+	}*/
+
+
 	public Observable<Integer> getNewPostsCount() {
 		L.v("start getting count");
-		ReplaySubject<Integer> result = ReplaySubject.create();
-		Observable.timer(10, TimeUnit.SECONDS).subscribe(res -> {
-			News latest = db.fetchLatestPost();
-			if (latest != null) {
-				networker(restApi.getNews2(null, null, null, 50, latest.date + 1, 0))
-						.map(newsResponse -> newsResponse.items.size())
-						.subscribe(new Subscriber<Integer>() {
-							@Override
-							public void onCompleted() {
-								result.onCompleted();
-							}
-
-
-							@Override
-							public void onError(final Throwable e) {
-								e.printStackTrace();
-								result.onError(e);
-							}
-
-
-							@Override
-							public void onNext(final Integer integer) {
-								L.v("on next count");
-								result.onNext(integer);
-							}
-						});
-			} else {
-				L.w("no one posts found in db");
-				result.onError(new VKException());
-			}
-
-		});
-
-		return result;
+		Observable<Integer> intervals =
+				Observable.interval(10, TimeUnit.SECONDS)
+				          .map(i -> db.fetchLatestPost())
+				          .flatMap(latest -> networker(restApi.getNews2(null, null, null, 50, latest.date + 1, 0)))
+				          .map(newsResponse -> newsResponse.items.size())
+				          .onErrorReturn(throwable -> 0)
+				          .subscribeOn(Schedulers.io())
+				          .observeOn(AndroidSchedulers.mainThread());
+		return intervals;
 
 	}
 
@@ -372,5 +385,31 @@ public class RestService {
 	private Observable<LikeResponse> like(final long id, final long ownerId, boolean doLike, String type) {
 		return networker(doLike ? restApi.like(id, ownerId, type) : restApi.unlike(id, ownerId, type)).subscribeOn(Schedulers.io())
 		                                                                                              .observeOn(AndroidSchedulers.mainThread());
+	}
+
+
+	public Observable<String> dummyRequestWithError(ApiResponse.Error e) {
+		ApiResponse<String> fake = generateFakeRequest(e);
+		return networker(Observable.from(fake));
+	}
+
+
+	public Observable<String> dummyRequest(String m) {
+		ApiResponse<String> fake = generateFakeRequest(m);
+		return networker(Observable.from(fake));
+	}
+
+
+	private ApiResponse<String> generateFakeRequest(final String m) {
+		ApiResponse<String> fake = new ApiResponse<>();
+		fake.response = m;
+		return fake;
+	}
+
+
+	private ApiResponse<String> generateFakeRequest(final ApiResponse.Error e) {
+		ApiResponse<String> fake = new ApiResponse<>();
+		fake.error = e;
+		return fake;
 	}
 }

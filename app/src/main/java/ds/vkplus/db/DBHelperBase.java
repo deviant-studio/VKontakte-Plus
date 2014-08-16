@@ -11,11 +11,16 @@ import ds.vkplus.model.*;
 import ds.vkplus.utils.L;
 
 import java.sql.SQLException;
+import java.util.concurrent.Callable;
+
+import static ds.vkplus.model.Filter.State.CHECKED;
+import static ds.vkplus.model.Filter.State.UNCHECKED;
+import static ds.vkplus.model.Filter.TYPE_COMMENTS;
 
 abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	protected final static String DATABASE_NAME = "database.db";
-	protected final static int DATABASE_VERSION = 28;
+	protected final static int DATABASE_VERSION = 35;
 
 	protected static Class[] classes = {
 			News.class,
@@ -33,13 +38,15 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 			Profile.class,
 			Video.class,
 			PostData.class,
-			PhotoPost.class
+			PhotoPost.class,
+			Filter.class
 	};
 
 	protected AndroidDao<News, Integer> newsDao;
 	protected AndroidDao<Attachment, Integer> attachmentsDao;
 	protected AndroidDao<Profile, Integer> profilesDao;
 	protected AndroidDao<Group, Integer> groupsDao;
+	public FiltersDao filtersDao;
 
 
 	public DBHelperBase(final Context context) {
@@ -48,6 +55,7 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 		attachmentsDao = getDao(Attachment.class);
 		groupsDao = getDao(Group.class);
 		profilesDao = getDao(Profile.class);
+		filtersDao = getDao(Filter.class);
 	}
 
 
@@ -72,10 +80,12 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	@Override
 	public void onCreate(final SQLiteDatabase database, final ConnectionSource connectionSource) {
+		L.v("onCreate table");
 		try {
 			for (Class cls : classes) {
 				TableUtils.createTable(connectionSource, cls);
 			}
+			generateFilters();
 		} catch (SQLException e) {
 			L.e("Can't create database");
 			e.printStackTrace();
@@ -83,8 +93,40 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 	}
 
 
+	protected void generateFilters() throws SQLException {
+		L.v("generating filters");
+		filtersDao.callBatchTasks(new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				// comments
+				Filter byLikesCount = new Filter("By Likes", Filter.MODE_RADIO, TYPE_COMMENTS);
+				filtersDao.create(byLikesCount);
+				filtersDao.create(new Filter("All", null, CHECKED, TYPE_COMMENTS, byLikesCount));
+				filtersDao.create(new Filter("1 Like", "likesCount>=1", UNCHECKED, TYPE_COMMENTS, byLikesCount));
+				filtersDao.create(new Filter("5 Likes", "likesCount>=5", UNCHECKED, TYPE_COMMENTS, byLikesCount));
+				filtersDao.create(new Filter("10 Likes", "likesCount>=10", UNCHECKED, TYPE_COMMENTS, byLikesCount));
+				filtersDao.create(new Filter("25 Likes", "likesCount>=25", UNCHECKED, TYPE_COMMENTS, byLikesCount));
+				filtersDao.create(new Filter("50 Likes", "likesCount>=50", UNCHECKED, TYPE_COMMENTS, byLikesCount));
+
+				Filter byContent = new Filter("By Content", Filter.MODE_CHECK, TYPE_COMMENTS);
+				filtersDao.create(byContent);
+				filtersDao.create(new Filter("Has attachments", null, UNCHECKED, TYPE_COMMENTS, byContent));
+				filtersDao.create(new Filter("Replies", null, UNCHECKED, TYPE_COMMENTS, byContent));
+				filtersDao.create(new Filter("Only mine", null, UNCHECKED, TYPE_COMMENTS, byContent));
+
+				// posts
+
+				return null;
+			}
+		});
+
+
+	}
+
+
 	@Override
 	public void onUpgrade(final SQLiteDatabase database, final ConnectionSource connectionSource, final int oldVersion, final int newVersion) {
+		L.v("onUpgrade table");
 		try {
 			for (Class cls : classes) {
 				TableUtils.dropTable(connectionSource, cls, true);

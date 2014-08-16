@@ -5,7 +5,9 @@ import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.BaseDaoImpl;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.misc.BaseDaoEnabled;
+import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.table.TableUtils;
 import ds.vkplus.App;
 import ds.vkplus.db.extras.AndroidDao;
@@ -284,6 +286,7 @@ public class DBHelper extends DBHelperBase {
 			TableUtils.dropTable(connectionSource, cls, true);
 			TableUtils.createTable(connectionSource, cls);
 		}
+		generateFilters();
 	}
 
 
@@ -334,11 +337,11 @@ public class DBHelper extends DBHelperBase {
 	}
 
 
-	public void saveCommentsResponse(final CommentsList comments) {
+	public void saveCommentsResponse(final CommentsList comments, final long postId) {
 		try {
 			saveEntities(comments.groups, getDao(Group.class));
 			saveEntities(comments.profiles, getDao(Profile.class));
-			saveComments(comments.items);
+			saveComments(comments.items, postId);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -348,7 +351,7 @@ public class DBHelper extends DBHelperBase {
 	}
 
 
-	public void saveComments(final List<Comment> list) throws SQLException {
+	public void saveComments(final List<Comment> list, final long postId) throws SQLException {
 		if (list == null)
 			return;
 		AndroidDao<Comment, Integer> dao = getDao(Comment.class);
@@ -358,9 +361,10 @@ public class DBHelper extends DBHelperBase {
 				for (Comment c : list) {
 					c.likesCount = c.likes.count;
 					c.likesUserLikes = c.likes.user_likes > 0;
-					dao.createOrUpdate(c);
+					c.postId = postId;
+					Dao.CreateOrUpdateStatus status = dao.createOrUpdate(c);
 
-					if (c.attachments != null)
+					if (c.attachments != null && status.isCreated())
 						for (Attachment a : c.attachments) {
 							a.comment = c;    // important!
 							saveAttachment(a);
@@ -381,4 +385,73 @@ public class DBHelper extends DBHelperBase {
 			return null;
 		}
 	}
+
+
+	public List<Comment> fetchComments(final long postId, final long dateFrom, final long dateTo, final List<Filter> filters) {
+		try {
+			Dao<Comment, ?> dao = getDao(Comment.class);
+			QueryBuilder b = dao.queryBuilder();
+			//final List<Where> filtersWhere = new ArrayList<>();
+			Where where = b.where();
+			where.between("date", dateFrom, dateTo);
+			where.and().eq("postId", postId);
+			PreparedQuery query;
+			if (filters != null && filters.size() != 0) {
+				L.v("fetch comments with filters");
+				for (Filter filter : filters) {
+					where.and();
+					whereBuilder(where, filter.condition);
+				}
+			} else {
+				L.v("fetch comments with no filters");
+			}
+			query = where.prepare();
+
+
+			return dao.query(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	public static final Pattern WHERE_PATTERN = Pattern.compile("(\\w+)\\s?([<>=]+|LIKE)\\s?(.+)");
+
+
+	private void whereBuilder(final Where where, final String condition) throws SQLException {
+		L.v("filter " + condition);
+		Matcher m = WHERE_PATTERN.matcher(condition);
+		if (m.matches()) {
+			String field = m.group(1);
+			String operator = m.group(2);
+			String value = m.group(3);
+			switch (operator) {
+				case ">":
+					where.gt(field, value);
+					break;
+				case "<":
+					where.lt(field, value);
+					break;
+				case "=":
+					where.eq(field, value);
+					break;
+				case "<>":
+					where.ne(field, value);
+					break;
+				case "<=":
+					where.le(field, value);
+					break;
+				case ">=":
+					where.ge(field, value);
+					break;
+				case "LIKE":
+					where.like(field, value);
+					break;
+			}
+		}
+
+	}
+
+
 }

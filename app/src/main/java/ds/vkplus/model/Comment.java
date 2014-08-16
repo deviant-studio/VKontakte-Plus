@@ -46,6 +46,8 @@ public class Comment {
 	public int likesCount;
 	@DatabaseField
 	public boolean likesUserLikes;
+	@DatabaseField
+	public long postId;
 
 	private Producer producer;
 

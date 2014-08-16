@@ -15,7 +15,8 @@
         android:layout_marginRight="10dp"
         android:background="@color/app_color"
 
-        android:layout_alignBottom="@+id/repost_avatar" />
+        android:layout_alignBottom="@+id/repost_avatar"
+        android:layout_alignTop="@+id/repost_avatar" />
 
     <ds.vkplus.ui.view.RoundImageView
         android:id="@+id/repost_avatar"
@@ -33,7 +34,7 @@
         android:fontFamily="sans-serif-condensed"
         android:text="Card Title"
         android:textColor="@color/dark"
-        android:textSize="16sp" />
+        android:textSize="15sp" />
 
 
     <TextView
@@ -41,6 +42,7 @@
         style="@style/date_text"
         android:text="20 june 2014"
         android:layout_below="@+id/repost_title"
+        android:textSize="10sp"
         android:layout_alignLeft="@+id/repost_title" />
 
 

@@ -4,19 +4,19 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import ds.vkplus.Constants;
 import ds.vkplus.R;
-import ds.vkplus.model.Attachment;
-import ds.vkplus.model.Comment;
-import ds.vkplus.model.CommentsList;
-import ds.vkplus.model.PhotoData;
+import ds.vkplus.actionprovider.FilterActionProvider;
+import ds.vkplus.db.DBHelper;
+import ds.vkplus.eventbus.events.FilterEvent;
+import ds.vkplus.model.*;
+import ds.vkplus.model.Filter;
 import ds.vkplus.ui.OnScrollBottomListener;
 import ds.vkplus.ui.view.FixedSizeImageView;
 import ds.vkplus.ui.view.FlowLayout;
@@ -26,6 +26,7 @@ import ds.vkplus.utils.Utils;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -50,6 +51,9 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	private int offset;
 	private boolean loadMore = false;
 	private CommentsAdapter adapter;
+	private Subscriber<List<Comment>> subscriber;
+	private long postId;
+	private long ownerId;
 
 
 	@Override
@@ -62,18 +66,35 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	public void onViewCreated(final View view, final Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		ButterKnife.inject(this, view);
+		setHasOptionsMenu(true);
 		content.setVisibility(View.GONE);
+
+		postId = getActivity().getIntent().getLongExtra(Constants.KEY_POST_ID, 0);
+		ownerId = getActivity().getIntent().getLongExtra(Constants.KEY_OWNER_ID, 0);
 
 		list.setOnScrollListener(new OnScrollBottomListener(s -> {
 			/*if (loadMore)
 				loadComments();*/
 		}));
 
-		//loadComments();
+		initUI();
+	}
+
+
+	private void initUI() {
 		adapter = new CommentsAdapter(getActivity(), new ArrayList<>());
 		list.setAdapter(adapter);
 		list.setOnItemClickListener(this);
 		loadAllComments();
+	}
+
+
+	@Override
+	public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
+		inflater.inflate(R.menu.comments, menu);
+		FilterActionProvider p = (FilterActionProvider) menu.findItem(R.id.filter).getActionProvider();
+		p.init(Filter.TYPE_COMMENTS);
+		super.onCreateOptionsMenu(menu, inflater);
 	}
 
 
@@ -89,9 +110,35 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	}
 
 
+	@Subscribe
+	public void onFilterEvent(FilterEvent e) {
+		//T.show(getActivity(),"on Filter");
+		//FiltersCache.getInstance().setCommentsFilters(e.filters);
+		List<Filter> actives = DBHelper.instance().filtersDao.fetchActiveFilters(Filter.TYPE_COMMENTS);
+		fetchFiltered(actives);
+	}
+
+
+	private void fetchFiltered(final List<Filter> actives) {
+		//DBHelper.instance().fetchCommentsFiltered
+
+		if (subscriber != null && !subscriber.isUnsubscribed()) {
+			L.v("filtered while loading");
+			subscriber.unsubscribe();
+			initUI();
+		} else {
+			// just fetch whole table
+			L.v("filtered in idle mode");
+			adapter.clear();
+			Observable.create((Subscriber<? super List<Comment>> subscriber) -> {
+				subscriber.onNext(DBHelper.instance().fetchComments(postId, 0, System.currentTimeMillis() / 1000, actives));
+				subscriber.onCompleted();
+			}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(this::fillView2, e -> e.printStackTrace());
+		}
+	}
+
+
 	private void loadComments() {
-		long postId = getActivity().getIntent().getLongExtra(Constants.KEY_POST_ID, 0);
-		long ownerId = getActivity().getIntent().getLongExtra(Constants.KEY_OWNER_ID, 0);
 		rest.getComments(postId, ownerId, offset, PAGE_SIZE)
 		    .subscribe(new Subscriber<CommentsList>() {
 
@@ -133,41 +180,42 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 
 
 	private void loadAllComments() {
-		long postId = getActivity().getIntent().getLongExtra(Constants.KEY_POST_ID, 0);
-		long ownerId = getActivity().getIntent().getLongExtra(Constants.KEY_OWNER_ID, 0);
+
+		subscriber = new Subscriber<List<Comment>>() {
+
+			@Override
+			public void onStart() {
+				toggleProgress(true);
+			}
+
+
+			@Override
+			public void onCompleted() {
+				toggleProgress(false);
+			}
+
+
+			@Override
+			public void onError(final Throwable e) {
+				L.e("error catched in fragment");
+				toggleProgress(false);
+				e.printStackTrace();
+			}
+
+
+			@Override
+			public void onNext(final List<Comment> comments) {
+				if (comments != null) {
+					L.i("got %s comments", comments.size());
+					fillView2(comments);
+				}
+
+			}
+		};
+
 		rest.getAllComments(postId, ownerId)
 		    .observeOn(AndroidSchedulers.mainThread())
-		    .subscribe(new Subscriber<List<Comment>>() {
-
-			    @Override
-			    public void onStart() {
-				    toggleProgress(true);
-			    }
-
-
-			    @Override
-			    public void onCompleted() {
-				    toggleProgress(false);
-			    }
-
-
-			    @Override
-			    public void onError(final Throwable e) {
-				    L.e("error catched in fragment");
-				    toggleProgress(false);
-				    e.printStackTrace();
-			    }
-
-
-			    @Override
-			    public void onNext(final List<Comment> comments) {
-				    if (comments != null) {
-					    L.i("got %s comments", comments.size());
-					    fillView2(comments);
-				    }
-
-			    }
-		    });
+		    .subscribe(subscriber);
 	}
 
 
@@ -214,7 +262,6 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 		popup.setOnItemClickListener((parent, view2, position, id) -> {
 			switch (position) {
 				case 0: // like
-					long ownerId = getActivity().getIntent().getLongExtra(Constants.KEY_OWNER_ID, 0);
 					rest.likeComment(item.id, ownerId, !item.likesUserLikes).subscribe(likes -> {
 						//T.show(getActivity(), "done");
 						item.likesCount = likes.likes;
@@ -308,11 +355,13 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 							h.link.setVisibility(View.VISIBLE);
 							h.linkPrimary.setText(a.link.title);
 							h.linkSecondary.setText(a.link.url);
+							h.link.setOnClickListener(clicked -> Utils.openURL(a.link.url));
 							break;
 						case Attachment.TYPE_PAGE:
 							h.link.setVisibility(View.VISIBLE);
 							h.linkPrimary.setText(a.page.title);
 							h.linkSecondary.setText(getContext().getString(R.string.page));
+							//h.link.setOnClickListener(clicked->Utils.openURL(a.page.url));
 							break;
 						default: {
 

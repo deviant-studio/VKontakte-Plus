@@ -2,6 +2,8 @@ package ds.vkplus.utils;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.SpannableStringBuilder;
@@ -65,5 +67,31 @@ public class Utils {
 
 	public static boolean isMainThread() {
 		return (Looper.myLooper() == Looper.getMainLooper());
+	}
+
+
+	public static void openURL(final String url) {
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		App.instance().startActivity(i);
+	}
+
+
+	private static long debugTimer;
+
+
+	public static void startTimer() {
+		debugTimer = System.currentTimeMillis();
+	}
+
+
+	public static void stopTimer(String message) {
+		if (debugTimer != 0) {
+			float time = (System.currentTimeMillis() - debugTimer) / 1000F;
+			L.i("%s TIME=%s sec.", message != null ? message : "", time);
+			debugTimer = 0;
+		} else {
+			L.w("call startTimer() first");
+		}
 	}
 }

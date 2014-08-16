@@ -66,7 +66,6 @@ public class NewsFragment extends BaseFragment {
 	//private int newPosts;
 
 
-
 	@Override
 	public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 		return inflater.inflate(R.layout.list_news, null);
@@ -86,8 +85,6 @@ public class NewsFragment extends BaseFragment {
 
 		super.onViewCreated(view, savedInstanceState);
 	}
-
-
 
 
 	private void runCountChecker() {
@@ -111,19 +108,9 @@ public class NewsFragment extends BaseFragment {
 				//getActivity().invalidateOptionsMenu();
 			}
 		};
-		postsChecker = rest.work(subscriber -> {
-			L.v("postsChecker call");
-				rest.getNewPostsCount().subscribe(val -> {
-					subscriber.onNext(val);
-					subscriber.onCompleted();
-				}, e -> {
-					L.e("failed to get count");
-					e.printStackTrace();
-					subscriber.onError(e);
-				});
-		});
+		postsChecker = rest.getNewPostsCount();
 		AndroidObservable.bindFragment(this, postsChecker);
-		postsChecker.repeat().observeOn(AndroidSchedulers.mainThread()).subscribe(postsCountSubscriber);
+		postsChecker.observeOn(AndroidSchedulers.mainThread()).subscribe(postsCountSubscriber);
 
 	}
 
@@ -176,6 +163,7 @@ public class NewsFragment extends BaseFragment {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+
 
 	@Override
 	protected void onRefresh() {
@@ -311,6 +299,7 @@ public class NewsFragment extends BaseFragment {
 
 	public static class NewsRecyclerAdapter extends RecyclerView.Adapter<Holder> {
 
+		private static final int MAX_SIZE = 200;
 		private Point displaySize;
 		private List<News> data;
 		private Picasso picasso;
@@ -475,20 +464,10 @@ public class NewsFragment extends BaseFragment {
 
 				L.v("speed=%s", speed);
 				v.setTranslationY(Utils.dp(v.getContext(), 200));
-				/*v.setRotationX(40.0F);
-				v.setScaleX(0.8F);
-				v.setScaleY(0.55F);
-*/
 				ViewPropertyAnimator a = v.animate()
-						.translationY(0)
-				                          /*.rotationX(0.0F)
-				                          .rotationY(0.0F)
-				                          .scaleX(1.0F)
-				                          .scaleY(1.0F)*/
-						.setDuration(animDuration)
-						.setInterpolator(interpolator);
-					/*if (Build.VERSION.SDK_INT >= 16)
-						a.withLayer();*/
+				                          .translationY(0)
+				                          .setDuration(animDuration)
+				                          .setInterpolator(interpolator);
 
 				a.start();
 			}
@@ -508,6 +487,7 @@ public class NewsFragment extends BaseFragment {
 
 			if (photos.size() != 0) {
 				for (PhotoData photo : photos) {
+					Utils.startTimer();
 					FixedSizeImageView img;
 					if (imagesIterator.hasNext())
 						img = (FixedSizeImageView) imagesIterator.next();
@@ -545,6 +525,8 @@ public class NewsFragment extends BaseFragment {
 								EventBus.post(new UrlClickEvent(Collections.singletonList(url)));
 						}
 					});
+
+					Utils.stopTimer("image load");
 				}
 
 			}
@@ -586,6 +568,20 @@ public class NewsFragment extends BaseFragment {
 				data = new ArrayList<>(newData);
 
 			notifyItemRangeInserted(total, newData.size());
+
+			// clean up a little bit
+			if (data.size() > MAX_SIZE && newData.size() < MAX_SIZE) {
+				//data.removeAll(data.subList(0, newData.size()));
+				Iterator i = data.iterator();
+				int c = 0;
+				while (i.hasNext() && c < newData.size()) {
+					i.next();
+					i.remove();
+					c++;
+				}
+				notifyItemRangeRemoved(0, newData.size());
+			}
+
 
 		}
 

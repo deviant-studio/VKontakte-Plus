@@ -123,9 +123,8 @@ public class AccountHelper {
 		synchronized (this) {
 			Utils.post(this::startAuthActivity);
 			L.v("doing wait()");
-			this.wait(); // unlocks myRunable while waiting
-			final String token = getAM().peekAuthToken(getAccount(), Constants.AUTH_TOKEN_TYPE);
-			return token;
+			this.wait();
+			return peekToken();
 		}
 	}
 
@@ -134,5 +133,15 @@ public class AccountHelper {
 		Intent i = prepareAuthActivity(Constants.ACCOUNT_TYPE, null);
 		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		App.instance().startActivity(i);
+	}
+
+
+	public String peekToken() {
+		try {
+			return getAM().peekAuthToken(getAccount(), Constants.AUTH_TOKEN_TYPE);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return "";
+		}
 	}
 }
