@@ -16,11 +16,12 @@ import java.util.concurrent.Callable;
 import static ds.vkplus.model.Filter.State.CHECKED;
 import static ds.vkplus.model.Filter.State.UNCHECKED;
 import static ds.vkplus.model.Filter.TYPE_COMMENTS;
+import static ds.vkplus.model.Filter.TYPE_POSTS;
 
 abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	protected final static String DATABASE_NAME = "database.db";
-	protected final static int DATABASE_VERSION = 36;
+	protected final static int DATABASE_VERSION = 42;
 
 	protected static Class[] classes = {
 			News.class,
@@ -39,7 +40,7 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 			Video.class,
 			PostData.class,
 			PhotoPost.class,
-			Filter.class
+			//Filter.class
 	};
 
 	protected AndroidDao<News, Integer> newsDao;
@@ -80,11 +81,12 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	@Override
 	public void onCreate(final SQLiteDatabase database, final ConnectionSource connectionSource) {
-		L.v("onCreate table");
+		L.v("onCreate DB");
 		try {
 			for (Class cls : classes) {
 				TableUtils.createTable(connectionSource, cls);
 			}
+			TableUtils.createTable(connectionSource, Filter.class);
 			generateFilters();
 		} catch (SQLException e) {
 			L.e("Can't create database");
@@ -110,17 +112,52 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 				Filter byContent = new Filter("By Content", Filter.MODE_CHECK, TYPE_COMMENTS);
 				filtersDao.create(byContent);
-				filtersDao.create(new Filter("Has attachments", null, UNCHECKED, TYPE_COMMENTS, byContent));
-				filtersDao.create(new Filter("Replies", null, UNCHECKED, TYPE_COMMENTS, byContent));
-				filtersDao.create(new Filter("Only mine", null, UNCHECKED, TYPE_COMMENTS, byContent));
+				filtersDao.create(new Filter("Has attachments", "EXISTS (SELECT * FROM attachment b WHERE b.comment_id=id)", UNCHECKED, TYPE_COMMENTS, byContent));
+				filtersDao.create(new Filter("Replies", "reply_to_comment <> 0", UNCHECKED, TYPE_COMMENTS, byContent));
+				//filtersDao.create(new Filter("Only mine", "from_id=" + myId, UNCHECKED, TYPE_COMMENTS, byContent));
 
 				// posts
+				byLikesCount = new Filter("By Likes", Filter.MODE_RADIO, TYPE_POSTS);
+				filtersDao.create(byLikesCount);
+				filtersDao.create(new Filter("All", null, CHECKED, TYPE_POSTS, byLikesCount));
+				filtersDao.create(new Filter("10 Like", "likesCount>=10", UNCHECKED, TYPE_POSTS, byLikesCount));
+				filtersDao.create(new Filter("100 Likes", "likesCount>=100", UNCHECKED, TYPE_POSTS, byLikesCount));
+				filtersDao.create(new Filter("500 Likes", "likesCount>=500", UNCHECKED, TYPE_POSTS, byLikesCount));
+				filtersDao.create(new Filter("1000 Likes", "likesCount>=1000", UNCHECKED, TYPE_POSTS, byLikesCount));
+
+				Filter byGroup = new Filter("By Group", Filter.MODE_RADIO, TYPE_POSTS);
 
 				return null;
 			}
 		});
 
+	}
 
+
+	public void refreshOnlyMineCommentFilter(long myId) {
+		try {
+			Filter parent = filtersDao.queryBuilder()
+			                          .where()
+			                          .eq("filterType", 0)
+			                          .and()
+			                          .eq("title", "By Content")
+			                          .queryForFirst();
+			String name = "Only mine";
+			Filter byMe = filtersDao.queryBuilder()
+			                        .where()
+			                        .eq("filterType", 0)
+			                        .and()
+			                        .eq("title", name)
+			                        .queryForFirst();
+			if (byMe != null){
+				byMe.condition="from_id=" + myId;
+				filtersDao.update(byMe);
+			} else
+				filtersDao.create(new Filter(name, "from_id=" + myId, UNCHECKED, TYPE_COMMENTS, parent));
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 
@@ -131,6 +168,7 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 			for (Class cls : classes) {
 				TableUtils.dropTable(connectionSource, cls, true);
 			}
+			TableUtils.dropTable(connectionSource, Filter.class, true);
 		} catch (SQLException e) {
 			L.e("Can't drop table");
 			e.printStackTrace();

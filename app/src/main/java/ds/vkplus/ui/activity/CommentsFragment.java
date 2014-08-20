@@ -103,7 +103,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 
 	@Override
 	protected void onRefresh() {
-
+		initUI();
 	}
 
 
@@ -141,7 +141,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	}
 
 
-	private void loadComments() {
+	/*private void loadComments() {
 		rest.getComments(postId, ownerId, offset, PAGE_SIZE)
 		    .subscribe(new Subscriber<CommentsList>() {
 
@@ -179,7 +179,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 			    }
 		    });
 
-	}
+	}*/
 
 
 	private void loadAllComments() {

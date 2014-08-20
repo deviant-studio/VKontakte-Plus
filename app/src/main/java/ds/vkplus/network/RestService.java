@@ -132,7 +132,7 @@ public class RestService {
 					}
 					return count < 2;
 				})
-				.onErrorResumeNext(t->Observable.empty())
+				.onErrorResumeNext(t -> Observable.empty())
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread());
 
@@ -171,10 +171,12 @@ public class RestService {
 
 
 	public Observable<List<News>> getNews2(PostData nextData, int count) {
+
 		if (nextData == null && db.fetchNewsCount() != 0) {
-			L.w("next is null!");
+			L.w("next is null! fetching from database");
 			// check db here
 			return work(subscriber -> {
+
 				subscriber.onNext(db.fetchAllNews());
 				subscriber.onCompleted();
 			});
@@ -183,32 +185,28 @@ public class RestService {
 
 		//String filters = null;
 		String filters = "post,photo,photo_tag,friend,note";
-		/*post — новые записи со стен
-		photo — новые фотографии
-		photo_tag — новые отметки на фотографиях
-		wall_photo — новые фотографии на стенах
-		friend — новые друзья
-		note — новые заметки*/
 		ReplaySubject<List<News>> result = ReplaySubject.create();
 		Observable<NewsResponse> newsObserver = networker(restApi.getNews2(filters, null, nextData != null ? nextData.nextRaw : null, count, null, null));
-		newsObserver.subscribeOn(Schedulers.io())./*observeOn(AndroidSchedulers.mainThread()).*/subscribe(news -> {
-			L.v("is main thread=" + Utils.isMainThread());
-			db.saveNewsResponse(news);
-			final List<News> allNews = db.fetchNews(nextData != null ? nextData.postDate : -1);
-			result.onNext(allNews);
-			result.onCompleted();
-		}, result::onError);
+		newsObserver.subscribeOn(Schedulers.io())
+		            .observeOn(Schedulers.io())
+		            .subscribe(news -> {
+			            L.v("is main thread=" + Utils.isMainThread());
+			            db.saveNewsResponse(news);
+			            final List<News> allNews = db.fetchNews(nextData != null ? nextData.postDate : System.currentTimeMillis()/1000);
+			            result.onNext(allNews);
+			            result.onCompleted();
+		            }, result::onError);
 
 		return result.observeOn(AndroidSchedulers.mainThread());
 	}
 
 
-	public Observable<CommentsList> getComments(final long postId, final long ownerId, final int offset, final int count) {
+/*	public Observable<CommentsList> getComments(final long postId, final long ownerId, final int offset, final int count) {
 		return networker(
 				restApi.getComments(postId, ownerId, offset, count))
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread());
-	}
+	}*/
 
 
 	public Observable<List<Comment>> getAllComments(final long postId, final long ownerId) {
@@ -286,7 +284,7 @@ public class RestService {
 	}*/
 
 
-	public Observable<Integer> getNewPostsCount() {
+	/*public Observable<Integer> getNewPostsCount() {
 		L.v("start getting count");
 		int interval = Utils.isWifi() ? 10 : 120;
 		Observable<Integer> intervals =
@@ -295,6 +293,36 @@ public class RestService {
 				          .flatMap(latest -> networker(restApi.getNews2(null, null, null, 50, latest.date + 1, 0)))
 				          .map(newsResponse -> newsResponse.items.size())
 				          .onErrorReturn(throwable -> 0)
+				          .subscribeOn(Schedulers.io())
+				          .observeOn(AndroidSchedulers.mainThread());
+		return intervals;
+
+	}*/
+
+
+	/**
+	 * Saves latest posts to db and returns posts count
+	 * @return
+	 */
+	public Observable<Integer> getFreshNews() {
+		L.v("start getting count");
+		String filters = "post,photo,photo_tag,friend,note";
+		int interval = Utils.isWifi() ? 10 : 120;
+		Observable<Integer> intervals =
+				Observable.interval(interval, TimeUnit.SECONDS)
+				          .map(i -> db.fetchLatestPost())
+				          .flatMap(latest -> networker(restApi.getNews2(filters, null, null, 100, latest.date + 1, null)))
+				          .observeOn(Schedulers.io())
+				          //.subscribeOn(Schedulers.io())
+				          .map(newsResponse -> {
+					          L.v("is main thread=" + Utils.isMainThread());
+					          db.saveNewsResponse(newsResponse);
+					          return newsResponse.items.size();
+				          })
+				          .onErrorReturn(throwable -> {
+					          throwable.printStackTrace();
+					          return 0;
+				          })
 				          .subscribeOn(Schedulers.io())
 				          .observeOn(AndroidSchedulers.mainThread());
 		return intervals;

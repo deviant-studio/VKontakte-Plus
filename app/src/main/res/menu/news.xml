@@ -2,15 +2,11 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-   <!-- <item
-        android:id="@+id/refresh"
-        android:icon="@drawable/ic_action_navigation_refresh"
-        android:showAsAction="always"
-        android:title="@string/refresh" />-->
-
-   <!-- <item
-        android:id="@+id/force_refresh"
-        android:showAsAction="never"
-        android:title="Force Refresh" />-->
+    <item
+        android:id="@+id/filter"
+        android:icon="@drawable/ic_action_filter"
+        android:title="@string/filter"
+        android:actionProviderClass="ds.vkplus.actionprovider.FilterActionProvider"
+        android:showAsAction="always" />
 
 </menu>

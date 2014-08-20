@@ -22,11 +22,14 @@ import com.squareup.picasso.Picasso;
 import ds.vkplus.App;
 import ds.vkplus.Constants;
 import ds.vkplus.R;
+import ds.vkplus.actionprovider.FilterActionProvider;
 import ds.vkplus.db.DBHelper;
 import ds.vkplus.eventbus.EventBus;
 import ds.vkplus.eventbus.events.ClickEvent;
+import ds.vkplus.eventbus.events.FilterEvent;
 import ds.vkplus.eventbus.events.UrlClickEvent;
 import ds.vkplus.model.*;
+import ds.vkplus.model.Filter;
 import ds.vkplus.network.RestService;
 import ds.vkplus.ui.Croutons;
 import ds.vkplus.ui.OnScrollBottomRecyclerViewListener;
@@ -48,7 +51,7 @@ import java.util.List;
 
 public class NewsFragment extends BaseFragment {
 
-	private static final int PAGE_SIZE = 100;
+	private static final int PAGE_SIZE = 50;
 
 	@InjectView(R.id.list)
 	RecyclerView recyclerView;
@@ -63,7 +66,7 @@ public class NewsFragment extends BaseFragment {
 	private RecyclerView.LayoutManager mLayoutManager;
 	private Observable<Integer> postsChecker;
 	private Subscriber<Integer> postsCountSubscriber;
-	private int lastPosition;
+	private int newPostsCount;
 
 
 	@Override
@@ -106,12 +109,14 @@ public class NewsFragment extends BaseFragment {
 			@Override
 			public void onNext(final Integer count) {
 				L.v("new posts: " + count);
+				L.v("is main thread=" + Utils.isMainThread());
 				//newPosts = count;
-				refreshButton.setNotificationsCount(count);
+				newPostsCount += count;
+				refreshButton.setNotificationsCount(newPostsCount);
 				//getActivity().invalidateOptionsMenu();
 			}
 		};
-		postsChecker = rest.getNewPostsCount();
+		postsChecker = rest.getFreshNews();
 		AndroidObservable.bindFragment(this, postsChecker);
 		postsChecker.observeOn(AndroidSchedulers.mainThread()).subscribe(postsCountSubscriber);
 
@@ -133,7 +138,7 @@ public class NewsFragment extends BaseFragment {
 		mLayoutManager = new LinearLayoutManager(getActivity());
 		recyclerView.setLayoutManager(mLayoutManager);
 		RecyclerView.OnScrollListener scrollListener = new OnScrollBottomRecyclerViewListener((LinearLayoutManager) mLayoutManager,
-				lastPos -> loadMoreNews(getBottomNext(lastPos)));
+				lastPos -> loadMoreNews(getOldestNext()));
 		recyclerView.setOnScrollListener(scrollListener);
 		if (adapter == null) {
 			adapter = new NewsRecyclerAdapter(new ArrayList<>(), (OnScrollBottomRecyclerViewListener) scrollListener);
@@ -148,8 +153,8 @@ public class NewsFragment extends BaseFragment {
 	public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
 		inflater.inflate(R.menu.news, menu);
-		/*MenuItem refresh = menu.findItem(R.id.refresh);
-		refresh.setVisible(newPosts > 0);*/
+		FilterActionProvider p = (FilterActionProvider) menu.findItem(R.id.filter).getActionProvider();
+		p.init(Filter.TYPE_POSTS);
 	}
 
 
@@ -178,28 +183,39 @@ public class NewsFragment extends BaseFragment {
 	}*/
 
 
-	@Override
-	protected void onRefresh() {
-		toggleProgress(true);
-		initList();
-		rest.work(subscriber -> {
-			try {
-				DBHelper.instance().dropAll();
-				subscriber.onNext(true);
-				subscriber.onCompleted();
-			} catch (Exception e) {
-				e.printStackTrace();
-				subscriber.onError(e);
-			}
-		})
-		    .subscribe(res -> {
-			    //toggleProgress(false);
-			    loadNews();
-		    }, e -> Croutons.prepare().message("Failed to drop database").show(getActivity()));
+	@Subscribe
+	public void onFilterEvent(FilterEvent e) {
+		//initList();
+		loadNews();
 	}
 
 
-	private PostData getBottomNext(int pos) {
+	@Override
+	protected void onRefresh() {
+		toggleProgress(true);
+		//initList();
+		if (newPostsCount == 0) {
+			rest.work(subscriber -> {
+				try {
+					DBHelper.instance().dropAll();
+					subscriber.onNext(true);
+					subscriber.onCompleted();
+				} catch (Exception e) {
+					e.printStackTrace();
+					subscriber.onError(e);
+				}
+			})
+			    .subscribe(res -> {
+				    //toggleProgress(false);
+				    loadNews();
+			    }, e -> Croutons.prepare().message("Failed to drop database").show(getActivity()));
+		} else {
+			loadNews(); //
+		}
+	}
+
+
+	/*private PostData getBottomNext(int pos) {
 		L.v("next pos=" + pos);
 		long postId = adapter.getItemId(pos);
 		return DBHelper.instance().fetchNextByPostId(postId);
@@ -208,7 +224,11 @@ public class NewsFragment extends BaseFragment {
 
 	private PostData getLatestNext() {
 		return DBHelper.instance().fetchLatestNext();
-		//return Prefs.get().getString(Constants.KEY_NEXT, null);
+	}*/
+
+
+	private PostData getOldestNext() {
+		return DBHelper.instance().fetchOldestNext();
 	}
 
 
@@ -218,6 +238,9 @@ public class NewsFragment extends BaseFragment {
 
 
 	private void loadMoreNews(final PostData nextData) {
+		if (nextData == null)
+			initList();
+
 		rest.getNews2(nextData, PAGE_SIZE)
 				//.subscribe(this::fillView, e -> T.show(getActivity(), "error getting news"));
 				.subscribe(new Subscriber<List<News>>() {
@@ -248,6 +271,14 @@ public class NewsFragment extends BaseFragment {
 						if (news != null) {
 							//news.init();
 							fillView(news);
+
+							if (nextData == null) {
+								adapter.setPreviousPostition(newPostsCount);
+								if (newPostsCount != 0) {
+									recyclerView.scrollToPosition(newPostsCount - 1);
+									newPostsCount = 0;
+								}
+							}
 						}
 
 					}
@@ -265,9 +296,11 @@ public class NewsFragment extends BaseFragment {
 	private void fillView(final List<News> news) {
 		if (news.size() != 0)
 			empty.setVisibility(View.GONE);
+		else
+			loadMoreNews(getOldestNext());
 
-		PostData nextData = getLatestNext();
-		L.v("next: " + nextData.nextRaw);
+		//PostData nextData = getLatestNext();
+		//L.v("next: " + nextData.nextRaw);
 		adapter.addToEnd(news);
 
 		/*if (lastPosition != 0) {
@@ -284,12 +317,12 @@ public class NewsFragment extends BaseFragment {
 		News item = e.item;
 		switch (e.viewId) {
 			case R.id.comments:
-				if (item.commentsCount > 0) {
-					Intent i = new Intent(getActivity(), CommentsActivity.class);
-					i.putExtra(Constants.KEY_POST_ID, item.post_id);
-					i.putExtra(Constants.KEY_OWNER_ID, item.source_id);
-					startActivity(i);
-				}
+				//if (item.commentsCount > 0) {
+				Intent i = new Intent(getActivity(), CommentsActivity.class);
+				i.putExtra(Constants.KEY_POST_ID, item.post_id);
+				i.putExtra(Constants.KEY_OWNER_ID, item.source_id);
+				startActivity(i);
+				//}
 				break;
 
 			case R.id.link:
@@ -343,11 +376,22 @@ public class NewsFragment extends BaseFragment {
 		}
 
 
+		public void resetBottomScroller() {
+			scrollListener.prevLast = 0;
+		}
+
+
 		@Override
 		public Holder onCreateViewHolder(final ViewGroup parent, final int i) {
 			View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_post, parent, false);
 			Holder h = new Holder(v, this);
 			return h;
+		}
+
+
+		public void setPreviousPostition(final int previousPostition) {
+			this.previousPostition = previousPostition;
+			initTime = System.currentTimeMillis();
 		}
 
 
@@ -466,9 +510,10 @@ public class NewsFragment extends BaseFragment {
 
 			}
 
-			for (Photo photo : item.photosPersist) {
-				photos.add(new PhotoData(photo.photo_604, photo.width, photo.height, PhotoData.TYPE_PHOTO, photo.id));
-			}
+			if (item.photosPersist != null)
+				for (Photo photo : item.photosPersist) {
+					photos.add(new PhotoData(photo.photo_604, photo.width, photo.height, PhotoData.TYPE_PHOTO, photo.id));
+				}
 
 			if (photos.size() != 0) {
 				h.flow.setVisibility(View.VISIBLE);
@@ -494,6 +539,8 @@ public class NewsFragment extends BaseFragment {
 				                          .setInterpolator(interpolator);
 
 				a.start();
+			} else {
+				//v.setTranslationY(0);   // return to default
 			}
 
 			previousPostition = p;
@@ -583,13 +630,14 @@ public class NewsFragment extends BaseFragment {
 		public void addToEnd(final List<News> newData) {
 			int total = getItemCount();
 			if (data != null) {
-				if (data.size() == 0)
+				if (data.size() < 3)
 					initTime = System.currentTimeMillis();
 				data.addAll(newData);
 			} else
 				data = new ArrayList<>(newData);
 
 			notifyItemRangeInserted(total, newData.size());
+			//resetBottomScroller();
 
 			// clean up a little bit
 			if (data.size() > MAX_SIZE && newData.size() < MAX_SIZE) {

@@ -48,6 +48,9 @@ public class DBHelper extends DBHelperBase {
 	@DebugLog
 	public void saveNewsResponse(final NewsResponse news) {
 
+		if (news.items == null || news.items.size() == 0)
+			return;
+
 		try {
 			L.v("saving profiles...");
 			saveEntities(news.profiles, profilesDao);
@@ -165,9 +168,8 @@ public class DBHelper extends DBHelperBase {
 
 	public int fetchNewsCount() {
 		try {
-			return (int) newsDao.queryBuilder()//.where()
-					//.isNull("parent_id")
-					.countOf();
+			return (int) newsDao.queryBuilder()
+			                    .countOf();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return 0;
@@ -180,6 +182,19 @@ public class DBHelper extends DBHelperBase {
 		try {
 			Dao<PostData, ?> dao = getDao(PostData.class);
 			QueryBuilder<PostData, ?> qb = dao.queryBuilder().orderBy("fetchDate", false);
+			return qb.queryForFirst();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	@DebugLog
+	public PostData fetchOldestNext() {
+		try {
+			Dao<PostData, ?> dao = getDao(PostData.class);
+			QueryBuilder<PostData, ?> qb = dao.queryBuilder().orderBy("postDate", true);
 			return qb.queryForFirst();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -233,32 +248,47 @@ public class DBHelper extends DBHelperBase {
 
 
 	public List<News> fetchAllNews() {
-		try {
+		L.v("fetchAllNews");
+		return fetchNews(System.currentTimeMillis() / 1000);
+		/*try {
 			List<News> news = newsDao.queryBuilder()
 			                         .orderBy("date", false)
 			                         .where()
 			                         .isNull("parent_id")
 			                         .query();
+
+			L.v("size="+news.size());
 			return news;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return null;
+		return null;*/
 	}
 
 
 	public List<News> fetchNews(long byDate) {
-		if (byDate == -1)
-			return fetchAllNews();
-
+		/*if (byDate == -1)
+			return fetchAllNews(filters);*/
 		try {
-			List<News> news = newsDao.queryBuilder()
-			                         .orderBy("date", false)
-			                         .where()
-			                         .lt("date", byDate)
-			                         .isNull("parent_id")
-			                         .and(2)
-			                         .query();
+
+			final List<Filter> filters = filtersDao.fetchActiveFilters(Filter.TYPE_POSTS);
+			QueryBuilder<News, Integer> b = newsDao.queryBuilder().orderBy("date", false);
+			Where<News, Integer> where = b.where()
+			                              .lt("date", byDate)
+			                              .and()
+			                              .isNull("parent_id");
+
+			PreparedQuery query;
+			if (filters != null && filters.size() != 0) {
+				L.v("fetch news with filters");
+				for (Filter filter : filters) {
+					where.and();
+					whereBuilder(where, filter.condition);
+				}
+			}
+
+			List<News> news = where.query();
+
 			return news;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -286,7 +316,6 @@ public class DBHelper extends DBHelperBase {
 			TableUtils.dropTable(connectionSource, cls, true);
 			TableUtils.createTable(connectionSource, cls);
 		}
-		generateFilters();
 	}
 
 
@@ -405,6 +434,7 @@ public class DBHelper extends DBHelperBase {
 			} else {
 				L.v("fetch comments with no filters");
 			}
+			L.v("query="+where.getStatement());
 			query = where.prepare();
 
 
@@ -434,10 +464,16 @@ public class DBHelper extends DBHelperBase {
 					where.lt(field, value);
 					break;
 				case "=":
-					where.eq(field, value);
+					if (value.equals("NULL"))
+						where.isNull(field);
+					else
+						where.eq(field, value);
 					break;
 				case "<>":
-					where.ne(field, value);
+					if (value.equals("NULL"))
+						where.isNotNull(field);
+					else
+						where.ne(field, value);
 					break;
 				case "<=":
 					where.le(field, value);
@@ -449,6 +485,9 @@ public class DBHelper extends DBHelperBase {
 					where.like(field, value);
 					break;
 			}
+		} else {
+			L.v("raw clause");
+			where.raw(condition);
 		}
 
 	}
