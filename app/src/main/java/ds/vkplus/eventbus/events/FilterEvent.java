@@ -2,15 +2,13 @@ package ds.vkplus.eventbus.events;
 
 import ds.vkplus.model.Filter;
 
-import java.util.List;
-
 public class FilterEvent {
 
-	public final List<Filter> filters;
+	public final Filter filter;
 
 
-	public FilterEvent(final List<Filter> filters) {
-		this.filters = filters;
+	public FilterEvent(Filter filter) {
+		this.filter = filter;
 
 	}
 }

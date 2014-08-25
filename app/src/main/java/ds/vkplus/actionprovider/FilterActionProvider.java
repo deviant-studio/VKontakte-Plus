@@ -56,7 +56,7 @@ public class FilterActionProvider extends ActionProvider {
 		PopupWindow popup = new PopupWindow(getContext());
 		FilterExpandableListAdapter a = new FilterExpandableListAdapter(getContext(), filters);
 
-		a.setOnFilterUpdateListener(this::postEvent);
+		a.setOnFilterUpdateListener(() -> postEvent(null));
 
 		ExpandableListView list = new ExpandableListView(getContext());
 		list.setAdapter(a);
@@ -70,7 +70,8 @@ public class FilterActionProvider extends ActionProvider {
 				DBHelper.instance().filtersDao.toggleState(sub);
 				//sub.toggleState();
 				((FilterExpandableListAdapter) parent.getExpandableListAdapter()).notifyDataSetChanged();
-				postEvent();
+				Filter f = (Filter) parent.getExpandableListAdapter().getChild(groupPosition, childPosition);
+				postEvent(f);
 				return true;
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -85,7 +86,7 @@ public class FilterActionProvider extends ActionProvider {
 		}
 
 		popup.setContentView(list);
-		popup.setWidth(Utils.dp(getContext(), 240));
+		popup.setWidth(Utils.dp(getContext(), 280));
 		popup.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
 		popup.setFocusable(true);
 
@@ -96,8 +97,8 @@ public class FilterActionProvider extends ActionProvider {
 	}
 
 
-	private void postEvent() {
-		EventBus.post(new FilterEvent(filters));
+	private void postEvent(Filter f) {
+		EventBus.post(new FilterEvent(f));
 	}
 
 

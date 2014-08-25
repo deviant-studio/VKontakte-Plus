@@ -79,9 +79,12 @@ public class DBHelper extends DBHelperBase {
 				}
 			});
 
-			L.v("saving next value...");
+			L.v("saving next value... " + news.next_from);
+			//if (!news.next_from.isEmpty())
 			saveNext(news.items.get(news.items.size() - 1), news.next_from);
-
+			/*else if (news.items.size() > 1) {
+				saveFakeNext(news.items.get(news.items.size() - 2));    // trying to fix VK shit
+			}*/
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -163,6 +166,20 @@ public class DBHelper extends DBHelperBase {
 		data.fetchDate = System.currentTimeMillis();
 		data.total = fetchNewsCount();
 		getDao(PostData.class).createOrUpdate(data);
+	}
+
+
+	private void saveFakeNext(final News news) throws SQLException {
+		PostData oldest = fetchOldestNext();
+		Matcher m = NEXT_PATTERN.matcher(oldest.nextRaw);
+		if (m.matches()) {
+			String date = m.group(3);
+			final String fake_next = oldest.lastIndex + "/" + news.post_id + "_" + date + "_5";
+			L.v("fake next=" + fake_next);
+			saveNext(news, fake_next);
+		} else {
+			L.e("oldest next doesnt match regex pattern. double fail. this is not possible!");
+		}
 	}
 
 
@@ -277,16 +294,19 @@ public class DBHelper extends DBHelperBase {
 			                              .lt("date", byDate)
 			                              .and()
 			                              .isNull("parent_id");
+			//.and();
 
 			PreparedQuery query;
 			if (filters != null && filters.size() != 0) {
 				L.v("fetch news with filters");
 				for (Filter filter : filters) {
-					where.and();
+					//where.and();
 					whereBuilder(where, filter.condition);
 				}
-			}
 
+				//where.or(filters.size());
+			}
+			L.v("query=" + where.getStatement());
 			List<News> news = where.query();
 
 			return news;
@@ -428,13 +448,13 @@ public class DBHelper extends DBHelperBase {
 			if (filters != null && filters.size() != 0) {
 				L.v("fetch comments with filters");
 				for (Filter filter : filters) {
-					where.and();
+					//where.and();
 					whereBuilder(where, filter.condition);
 				}
 			} else {
 				L.v("fetch comments with no filters");
 			}
-			L.v("query="+where.getStatement());
+			L.v("query=" + where.getStatement());
 			query = where.prepare();
 
 
@@ -450,9 +470,10 @@ public class DBHelper extends DBHelperBase {
 
 
 	private void whereBuilder(final Where where, final String condition) throws SQLException {
-		L.v("filter " + condition);
+		//L.v("filter " + condition);
 		Matcher m = WHERE_PATTERN.matcher(condition);
 		if (m.matches()) {
+			where.and();
 			String field = m.group(1);
 			String operator = m.group(2);
 			String value = m.group(3);
@@ -487,10 +508,44 @@ public class DBHelper extends DBHelperBase {
 			}
 		} else {
 			L.v("raw clause");
+
+			// bypass groups filter
+			if (condition.startsWith("-")) {
+				L.w("skipped filter because of group filter");
+				where.and().eq("source_id", condition);
+				return;
+			}
 			where.raw(condition);
 		}
 
 	}
 
 
+	public List<Group> fetchMyGroups() {
+		try {
+			return getDao(Group.class).queryBuilder().where().eq("is_member", 1).query();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	public String fetchCurrentGroupFilterId() {
+		try {
+			Filter parent = getDao(Filter.class).queryBuilder().where().eq("title", FILTER_BY_GROUP).queryForFirst();
+			if (parent != null)
+				return getDao(Filter.class).queryBuilder()
+				                           .where()
+				                           .eq("state", Filter.State.CHECKED)
+				                           .and()
+				                           .eq("parent_id", parent.id)
+				                           .and()
+				                           .isNotNull("condition")
+				                           .queryForFirst().condition;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

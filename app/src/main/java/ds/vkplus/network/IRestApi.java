@@ -24,6 +24,16 @@ interface IRestApi {
 			@Query("max_photos") Integer maxPhotos);
 
 
+	@GET("/wall.get")
+	Observable<ApiResponse<NewsResponse>> getWall(
+			@Query("filters") String filters,
+			@Query("source_ids") String sourceIds,  // groups, friends, pages, following, <uid>
+			@Query("start_from") String next,
+			@Query("count") int count,            // max=100
+			@Query("start_time") Long startTime,
+			@Query("max_photos") Integer maxPhotos);
+
+
 	/*
 	owner_id	идентификатор владельца страницы (пользователь или сообщество).
 
@@ -140,4 +150,7 @@ interface IRestApi {
 			@Query("owner_id") long ownerId,
 			@Query("type") String type
 	);
+
+	@GET("/groups.get?extended=1")
+	Observable<ApiResponse<VKList<Group>>> getGroups();
 }

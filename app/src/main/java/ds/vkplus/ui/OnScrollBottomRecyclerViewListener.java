@@ -46,14 +46,16 @@ public class OnScrollBottomRecyclerViewListener implements RecyclerView.OnScroll
 
 	@Override
 	public void onScrolled(final int i, final int speed) {
-		last = lm.findLastCompletelyVisibleItemPosition();
-		if (last == -1)
-			last = lm.findLastVisibleItemPosition();
-		total = lm.getItemCount();
-		//L.v("total=%s prevLast=%s last=%s sate=%s", total, prevLast, last, scrollState);
-		checkResult();
-		prevLast = last;
-		this.speed = speed;
+		if (lm != null) {
+			last = lm.findLastCompletelyVisibleItemPosition();
+			if (last == -1)
+				last = lm.findLastVisibleItemPosition();
+			total = lm.getItemCount();
+			//L.v("total=%s prevLast=%s last=%s sate=%s", total, prevLast, last, scrollState);
+			checkResult();
+			prevLast = last;
+			this.speed = speed;
+		}
 	}
 
 

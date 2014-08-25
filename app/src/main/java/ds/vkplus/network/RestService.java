@@ -1,9 +1,11 @@
 package ds.vkplus.network;
 
+import android.os.NetworkOnMainThreadException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ds.vkplus.auth.AccountHelper;
 import ds.vkplus.db.DBHelper;
+import ds.vkplus.db.extras.AndroidDao;
 import ds.vkplus.exception.VKException;
 import ds.vkplus.model.*;
 import ds.vkplus.utils.L;
@@ -17,6 +19,7 @@ import rx.schedulers.Schedulers;
 import rx.subjects.ReplaySubject;
 
 import java.lang.reflect.Modifier;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -118,7 +121,7 @@ public class RestService {
 					}
 				})
 				.retry((count, e) -> {
-					L.v("onRetry");
+					L.v("onRetry " + count);
 					if (e instanceof VKException) {
 						L.e("vk exception: " + ((VKException) e).message);
 						if (((VKException) e).code == VKException.CODE_TOKEN_OBSOLETED) {
@@ -170,7 +173,7 @@ public class RestService {
 	}*/
 
 
-	public Observable<List<News>> getNews2(PostData nextData, int count) {
+	public Observable<List<News>> getNews2(PostData nextData, String sourceId, int count) {
 
 		if (nextData == null && db.fetchNewsCount() != 0) {
 			L.w("next is null! fetching from database");
@@ -186,13 +189,13 @@ public class RestService {
 		//String filters = null;
 		String filters = "post,photo,photo_tag,friend,note";
 		ReplaySubject<List<News>> result = ReplaySubject.create();
-		Observable<NewsResponse> newsObserver = networker(restApi.getNews2(filters, null, nextData != null ? nextData.nextRaw : null, count, null, null));
+		Observable<NewsResponse> newsObserver = networker(restApi.getNews2(filters, sourceId, nextData != null ? nextData.nextRaw : null, count, null, null));
 		newsObserver.subscribeOn(Schedulers.io())
 		            .observeOn(Schedulers.io())
 		            .subscribe(news -> {
 			            L.v("is main thread=" + Utils.isMainThread());
 			            db.saveNewsResponse(news);
-			            final List<News> allNews = db.fetchNews(nextData != null ? nextData.postDate : System.currentTimeMillis()/1000);
+			            final List<News> allNews = db.fetchNews(nextData != null ? nextData.postDate : System.currentTimeMillis() / 1000);
 			            result.onNext(allNews);
 			            result.onCompleted();
 		            }, result::onError);
@@ -302,6 +305,7 @@ public class RestService {
 
 	/**
 	 * Saves latest posts to db and returns posts count
+	 *
 	 * @return
 	 */
 	public Observable<Integer> getFreshNews() {
@@ -311,20 +315,21 @@ public class RestService {
 		Observable<Integer> intervals =
 				Observable.interval(interval, TimeUnit.SECONDS)
 				          .map(i -> db.fetchLatestPost())
-				          .flatMap(latest -> networker(restApi.getNews2(filters, null, null, 100, latest.date + 1, null)))
-				          .observeOn(Schedulers.io())
-				          //.subscribeOn(Schedulers.io())
-				          .map(newsResponse -> {
-					          L.v("is main thread=" + Utils.isMainThread());
-					          db.saveNewsResponse(newsResponse);
-					          return newsResponse.items.size();
-				          })
-				          .onErrorReturn(throwable -> {
-					          throwable.printStackTrace();
-					          return 0;
-				          })
-				          .subscribeOn(Schedulers.io())
-				          .observeOn(AndroidSchedulers.mainThread());
+				          .flatMap(latest -> networker(
+						          restApi.getNews2(filters, null, null, 100, latest != null ? latest.date + 1 : System.currentTimeMillis() / 1000, null)))
+						.observeOn(Schedulers.io())
+								//.subscribeOn(Schedulers.io())
+						.map(newsResponse -> {
+							L.v("is main thread=" + Utils.isMainThread());
+							db.saveNewsResponse(newsResponse);
+							return newsResponse.items.size();
+						})
+						.onErrorReturn(throwable -> {
+							throwable.printStackTrace();
+							return 0;
+						})
+						.subscribeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread());
 		return intervals;
 
 	}
@@ -358,6 +363,32 @@ public class RestService {
 	private Observable<LikeResponse> like(final long id, final long ownerId, boolean doLike, String type) {
 		return networker(doLike ? restApi.like(id, ownerId, type) : restApi.unlike(id, ownerId, type)).subscribeOn(Schedulers.io())
 		                                                                                              .observeOn(AndroidSchedulers.mainThread());
+	}
+
+
+	public Observable<VKList<Group>> getGroups() {
+
+		Observable<VKList<Group>> result = networker(restApi.getGroups())
+				.observeOn(Schedulers.io())
+				.map(groups -> {
+					try {
+						if (Utils.isMainThread()) {
+							throw new NetworkOnMainThreadException();
+						}
+						AndroidDao<Group, Integer> dao = db.getDao(Group.class);
+						db.saveEntities(groups.items, dao);
+						List<Group> myGroups = db.fetchMyGroups();
+						db.refreshGroupsFilter(myGroups);
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+
+					return groups;
+				})
+				.observeOn(AndroidSchedulers.mainThread());
+
+		return result;
+
 	}
 
 

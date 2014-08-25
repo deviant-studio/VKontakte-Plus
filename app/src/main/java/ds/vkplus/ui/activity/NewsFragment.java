@@ -67,6 +67,7 @@ public class NewsFragment extends BaseFragment {
 	private Observable<Integer> postsChecker;
 	private Subscriber<Integer> postsCountSubscriber;
 	private int newPostsCount;
+	private String currentSourceId;
 
 
 	@Override
@@ -81,6 +82,10 @@ public class NewsFragment extends BaseFragment {
 		setHasOptionsMenu(true);
 
 		initList();
+
+		currentSourceId = DBHelper.instance().fetchCurrentGroupFilterId();
+
+		L.v("current group filter=" + currentSourceId);
 
 		loadNews();
 
@@ -186,6 +191,16 @@ public class NewsFragment extends BaseFragment {
 	@Subscribe
 	public void onFilterEvent(FilterEvent e) {
 		//initList();
+		Filter f = e.filter;
+		if (f != null && f.parent != null && f.parent.title.equals(DBHelper.FILTER_BY_GROUP)) {
+			L.v("group filter selected");
+			currentSourceId = f.condition;
+			newPostsCount = 0;
+			//onRefresh();
+			initList();
+
+		} //else
+
 		loadNews();
 	}
 
@@ -194,7 +209,7 @@ public class NewsFragment extends BaseFragment {
 	protected void onRefresh() {
 		toggleProgress(true);
 		//initList();
-		if (newPostsCount == 0) {
+		if (newPostsCount == 0 || currentSourceId != null) {
 			rest.work(subscriber -> {
 				try {
 					DBHelper.instance().dropAll();
@@ -238,10 +253,16 @@ public class NewsFragment extends BaseFragment {
 
 
 	private void loadMoreNews(final PostData nextData) {
-		if (nextData == null)
+		if (nextData == null/* || nextData.nextRaw.isEmpty()*/)
 			initList();
 
-		rest.getNews2(nextData, PAGE_SIZE)
+		L.v("next=%s", nextData != null ? nextData.nextRaw : "null");
+		if (nextData != null && nextData.nextRaw.equals("")) {
+			L.e("empty next. the end of news");
+			return;
+		}
+
+		rest.getNews2(nextData, currentSourceId, PAGE_SIZE)
 				//.subscribe(this::fillView, e -> T.show(getActivity(), "error getting news"));
 				.subscribe(new Subscriber<List<News>>() {
 
@@ -253,7 +274,7 @@ public class NewsFragment extends BaseFragment {
 
 					@Override
 					public void onCompleted() {
-						toggleProgress(false);
+
 					}
 
 
@@ -294,11 +315,13 @@ public class NewsFragment extends BaseFragment {
 
 
 	private void fillView(final List<News> news) {
-		if (news.size() != 0)
+		if (news.size() != 0) {
 			empty.setVisibility(View.GONE);
-		else
+			toggleProgress(false);
+		} else {
+			L.w("load more because result is empty");
 			loadMoreNews(getOldestNext());
-
+		}
 		//PostData nextData = getLatestNext();
 		//L.v("next: " + nextData.nextRaw);
 		adapter.addToEnd(news);
@@ -446,7 +469,7 @@ public class NewsFragment extends BaseFragment {
 			//}
 
 			Utils.toggleView(h.text, !TextUtils.isEmpty(item.text));
-			Utils.toggleView(h.likes, item.likesCanLike);
+			//Utils.toggleView(h.likes, item.likesCanLike);
 			Utils.toggleView(h.comments, item.commentsCanPost);
 
 			List<PhotoData> photos = new ArrayList<>();

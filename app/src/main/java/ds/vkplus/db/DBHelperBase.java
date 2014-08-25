@@ -11,6 +11,7 @@ import ds.vkplus.model.*;
 import ds.vkplus.utils.L;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import static ds.vkplus.model.Filter.State.CHECKED;
@@ -21,7 +22,10 @@ import static ds.vkplus.model.Filter.TYPE_POSTS;
 abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	protected final static String DATABASE_NAME = "database.db";
-	protected final static int DATABASE_VERSION = 42;
+	protected final static int DATABASE_VERSION = 53;
+
+	public static final String FILTER_BY_GROUP = "By Group";
+	public static final String FILTER_BY_ME = "Only mine";
 
 	protected static Class[] classes = {
 			News.class,
@@ -125,7 +129,9 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 				filtersDao.create(new Filter("500 Likes", "likesCount>=500", UNCHECKED, TYPE_POSTS, byLikesCount));
 				filtersDao.create(new Filter("1000 Likes", "likesCount>=1000", UNCHECKED, TYPE_POSTS, byLikesCount));
 
-				Filter byGroup = new Filter("By Group", Filter.MODE_RADIO, TYPE_POSTS);
+				Filter byGroup = new Filter(FILTER_BY_GROUP, Filter.MODE_RADIO, TYPE_POSTS);
+				filtersDao.create(byGroup);
+				filtersDao.create(new Filter("All", null, CHECKED, TYPE_POSTS, byGroup));
 
 				return null;
 			}
@@ -142,18 +148,53 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 			                          .and()
 			                          .eq("title", "By Content")
 			                          .queryForFirst();
-			String name = "Only mine";
+			String name = FILTER_BY_ME;
 			Filter byMe = filtersDao.queryBuilder()
 			                        .where()
 			                        .eq("filterType", 0)
 			                        .and()
 			                        .eq("title", name)
 			                        .queryForFirst();
-			if (byMe != null){
-				byMe.condition="from_id=" + myId;
+			if (byMe != null) {
+				byMe.condition = "from_id=" + myId;
 				filtersDao.update(byMe);
 			} else
 				filtersDao.create(new Filter(name, "from_id=" + myId, UNCHECKED, TYPE_COMMENTS, parent));
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	public void refreshGroupsFilter(final List<Group> myGroups) {
+		L.v("groups: refresh");
+		try {
+			//String name = FILTER_BY_GROUP;
+			Filter parent = filtersDao.queryBuilder()
+			                          .where()
+			                          .eq("filterType", TYPE_POSTS)
+			                          .and()
+			                          .eq("title", FILTER_BY_GROUP)
+			                          .queryForFirst();
+			if (parent == null)
+				return;
+
+			for (Group group : myGroups) {
+				Filter f = filtersDao.queryBuilder()
+				                     .where()
+				                     .eq("title", group.getName())
+				                     .and()
+				                     .eq("parent_id", parent.id).queryForFirst();
+
+				if (f == null) {
+					filtersDao.create(new Filter(group.getName(),/* String.format("source_id=%s",*/ String.valueOf(-group.id), UNCHECKED, TYPE_POSTS, parent));
+					//new Filter(group.getName(),/* String.format("source_id=%s",*/ String.valueOf(-group.id), UNCHECKED, TYPE_POSTS, parent);
+					L.v("group %s saved", group.getName());
+				}
+			}
+
+			parent.update();
 
 		} catch (SQLException e) {
 			e.printStackTrace();

@@ -26,6 +26,12 @@ public class MainActivity extends FragmentActivity {
 			showFragment();
 			//RestService.get().login(this).subscribe(token -> showFragment(), e -> T.show(this, "Failed to login"));
 		}
+
+		RestService.get()
+		           .getGroups()
+		           .subscribe(groups -> {
+			           L.v("groups fetched successfully");
+		           }, Throwable::printStackTrace);
 	}
 
 

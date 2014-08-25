@@ -74,4 +74,9 @@ public class Photo extends BaseDaoEnabled {
 	public String getBiggestPhoto() {
 		return Observable.from(photo_2560, photo_1280, photo_807, photo_604).toBlocking().first(val -> val != null);
 	}
+
+
+	public String getThumb() {
+		return Observable.from(photo_604, photo_807, photo_1280, photo_2560).toBlocking().first(val -> val != null);
+	}
 }

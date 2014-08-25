@@ -20,6 +20,7 @@ import ds.vkplus.model.Comment;
 import ds.vkplus.model.News;
 import ds.vkplus.model.PhotoData;
 import ds.vkplus.ui.Croutons;
+import ds.vkplus.utils.L;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -45,6 +46,7 @@ public class PhotosActivity extends Activity {
 
 		Collection<Attachment> attachments = null;
 		long id = getIntent().getLongExtra(Constants.KEY_POST_ID, -1);
+		L.v("post id=" + id);
 		News post = DBHelper.instance().fetchNewsById((int) id);
 		if (post != null) {
 			attachments = post.attachments;
@@ -70,13 +72,14 @@ public class PhotosActivity extends Activity {
 		}
 
 		long photoId = getIntent().getLongExtra(Constants.KEY_PHOTO_ID, -1);
+		L.v("photo id=" + photoId);
 
 		int currIndex = 0;
 		final List<PhotoData> data = new ArrayList<>();
 		int count = 0;
 		for (Attachment a : attachments) {
 			if (a.photo != null) {
-				PhotoData pd = new PhotoData(a.photo.photo_604, a.photo.getBiggestPhoto(), a.photo.id);
+				PhotoData pd = new PhotoData(a.photo.getThumb(), a.photo.getBiggestPhoto(), a.photo.id);
 				data.add(pd);
 				if (a.photo.id == photoId)
 					currIndex = count;

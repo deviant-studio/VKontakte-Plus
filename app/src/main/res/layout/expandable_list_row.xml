@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginLeft="5dp"
+        android:textSize="14sp"
         android:textColor="@color/dark"
         android:focusable="false"
         android:focusableInTouchMode="false"

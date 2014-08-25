@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import ds.vkplus.R;
+import ds.vkplus.utils.L;
 
 public class RefreshButton extends FrameLayout {
 
@@ -100,7 +101,8 @@ public class RefreshButton extends FrameLayout {
 
 
 	public void toggleProgress(boolean enable) {
-		if (enable == rotating)
+		L.v("progress "+enable);
+		if (enable == rotating && enable)
 			return;
 
 		rotating = enable;
