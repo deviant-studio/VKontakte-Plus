@@ -4,12 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.*;
 import android.widget.*;
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import ds.vkplus.Constants;
@@ -41,13 +42,13 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 
 	public static final Pattern REPLY_PATTERN = Pattern.compile("\\[id\\d+\\|(.+)\\]");
 
-	@InjectView(android.R.id.list)
+	@Bind(android.R.id.list)
 	ListView list;
 
-	@InjectView(android.R.id.empty)
+	@Bind(android.R.id.empty)
 	TextView empty;
 
-	@InjectView(R.id.content)
+	@Bind(R.id.content)
 	ViewGroup content;
 
 	private static final int PAGE_SIZE = 10;
@@ -68,7 +69,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	@Override
 	public void onViewCreated(final View view, final Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		ButterKnife.inject(this, view);
+		ButterKnife.bind(this, view);
 		setHasOptionsMenu(true);
 		content.setVisibility(View.GONE);
 
@@ -95,7 +96,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	@Override
 	public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
 		inflater.inflate(R.menu.comments, menu);
-		FilterActionProvider p = (FilterActionProvider) menu.findItem(R.id.filter).getActionProvider();
+		FilterActionProvider p = (FilterActionProvider) MenuItemCompat.getActionProvider(menu.findItem(R.id.filter));
 		p.init(Filter.TYPE_COMMENTS);
 		super.onCreateOptionsMenu(menu, inflater);
 	}
@@ -356,7 +357,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 							photos.add(new PhotoData(imageUrl, a.photo.width, a.photo.height, PhotoData.TYPE_PHOTO, a.photo.id));
 							break;
 						case Attachment.TYPE_VIDEO:
-							imageUrl = Observable.from(a.video.photo_640, a.video.photo_320, a.video.photo_130).toBlocking().first(pic -> pic != null);
+							imageUrl = Observable.just(a.video.photo_640, a.video.photo_320, a.video.photo_130).toBlocking().first(pic -> pic != null);
 							PhotoData pd = new PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_VIDEO, a.video.id);
 							photos.add(pd);
 							break;
@@ -393,7 +394,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 				int size=-1;
 				/*DisplayMetrics displayMetrics = App.instance().getResources().getDisplayMetrics();
 				size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance(), 28) / 8;*/
-				NewsFragment.NewsRecyclerAdapter.loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(position));
+				NewsFragment.NewsRecyclerAdapter.loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(position),true);
 
 				// clicks
 
@@ -412,30 +413,30 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 
 		public static class Holder {
 
-			@InjectView(R.id.text)
+			@Bind(R.id.text)
 			public TextView text;
-			@InjectView(R.id.likes)
+			@Bind(R.id.likes)
 			public CheckedTextView likes;
-			@InjectView(R.id.date)
+			@Bind(R.id.date)
 			public TextView date;
-			@InjectView(R.id.link)
+			@Bind(R.id.link)
 			public View link;
-			@InjectView(R.id.link_primary)
+			@Bind(R.id.link_primary)
 			public TextView linkPrimary;
-			@InjectView(R.id.link_secondary)
+			@Bind(R.id.link_secondary)
 			public TextView linkSecondary;
-			@InjectView(R.id.flow)
+			@Bind(R.id.flow)
 			public FlowLayout flow;
-			@InjectView(R.id.title)
+			@Bind(R.id.title)
 			public TextView title;
-			@InjectView(R.id.icon)
+			@Bind(R.id.icon)
 			public ImageView avatar;
 
 			private List<View> cache;
 
 
 			public Holder(final View v) {
-				ButterKnife.inject(this, v);
+				ButterKnife.bind(this, v);
 
 			}
 

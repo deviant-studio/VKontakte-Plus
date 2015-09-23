@@ -7,4 +7,7 @@
     android:duration="1000"
     android:repeatCount="infinite"
     android:fromDegrees="0"
-    android:toDegrees="360" />
+    android:toDegrees="-360" />
+
+<!--
+todo rewrite with objAnimator-->

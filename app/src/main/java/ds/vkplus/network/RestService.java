@@ -339,7 +339,7 @@ public class RestService {
 		Observable<String> result;
 		if (v.player != null) {
 			L.v("found cached video");
-			result = Observable.from(v.player);
+			result = Observable.just(v.player);
 		} else {
 			L.v("fething video data");
 			String video = v.owner_id + "_" + v.id + "_" + v.access_key;
@@ -394,13 +394,13 @@ public class RestService {
 
 	public Observable<String> dummyRequestWithError(ApiResponse.Error e) {
 		ApiResponse<String> fake = generateFakeRequest(e);
-		return networker(Observable.from(fake));
+		return networker(Observable.just(fake));
 	}
 
 
 	public Observable<String> dummyRequest(String m) {
 		ApiResponse<String> fake = generateFakeRequest(m);
-		return networker(Observable.from(fake));
+		return networker(Observable.just(fake));
 	}
 
 

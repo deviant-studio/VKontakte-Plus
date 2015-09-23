@@ -2,40 +2,62 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
-        <item name="android:actionBarStyle">@style/ActionBar</item>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="actionBarStyle">@style/ActionBar</item>
+        <item name="windowActionBarOverlay">true</item>
+        <item name="actionBarTheme">@style/ActionBarTheme</item>
+        <item name="android:windowContentOverlay">@null</item>
+      <!--  <item name="actionBarIconColor">#f00</item>-->
+        <item name="colorPrimary">@color/app_color</item>
+        <item name="colorPrimaryDark">@color/app_color_dark</item>
+        <item name="colorAccent">@color/app_color</item>
+
+        <!--<item name="android:statusBarColor">?colorPrimaryDark</item>-->
+
+        <item name="android:textColorPrimary">@color/dark</item>
+
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:actionBarItemBackground">@drawable/light_selector</item>
         <item name="android:listChoiceBackgroundIndicator">@drawable/card_selector</item>
     </style>
 
-    <style name="ActionBar" parent="android:Widget.Holo.ActionBar.Solid">
-        <item name="android:background">@color/app_color</item>
-        <item name="android:backgroundSplit">@color/app_color</item>
-        <item name="android:titleTextStyle">@style/ActionBarTitle</item>
-        <item name="android:logo">@drawable/logo</item>
+    <style name="ActionBar" parent="Widget.AppCompat.ActionBar.Solid">
+        <item name="titleTextStyle">@style/ActionBarTitle</item>
+      <!--  <item name="height">40dp</item>-->
+        <!--<item name="android:gravity">top</item>-->
+        <item name="elevation">0dp</item>
+        <item name="displayOptions">showTitle|showHome|showCustom</item>
     </style>
 
-    <style name="ActionBarTitle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+    <style name="ActionBarTitle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
         <item name="android:fontFamily">sans-serif-light</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">20sp</item>
     </style>
 
 
-    <style name="PhotosTheme" parent="android:Theme.Holo">
-        <item name="android:actionBarStyle">@style/DarkActionBar</item>
+    <style name="PhotosTheme" parent="Theme.AppCompat">
+        <item name="actionBarStyle">@style/DarkActionBar</item>
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:actionBarItemBackground">@drawable/card_selector</item>
         <item name="android:listChoiceBackgroundIndicator">@drawable/card_selector</item>
     </style>
 
-    <style name="DarkActionBar" parent="android:Widget.Holo.ActionBar.Solid">
+    <style name="DarkActionBar" parent="Widget.AppCompat.ActionBar.Solid">
         <item name="android:background">@color/dark</item>
         <item name="android:backgroundSplit">@color/dark</item>
         <item name="android:titleTextStyle">@style/ActionBarTitle</item>
         <item name="android:logo">@drawable/logo</item>
         <item name="android:actionBarDivider">@null</item>
+    </style>
+
+    <style name="ActionBarTheme" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="actionBarStyle">@style/ActionBar</item>
+        <!--<item name="colorControlNormal">@color/white</item>
+        <item name="colorControlActivated">@color/white_semitransparent3</item>
+        <item name="colorControlHighlight">@color/white_semitransparent3</item>-->
+        <!--<item name="colorAccent">@color/white</item>-->
+
     </style>
 
 

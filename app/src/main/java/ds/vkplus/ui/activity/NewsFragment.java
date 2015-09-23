@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -15,8 +18,8 @@ import android.view.*;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.*;
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import ds.vkplus.App;
@@ -41,7 +44,6 @@ import ds.vkplus.utils.T;
 import ds.vkplus.utils.Utils;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.observables.AndroidObservable;
 import rx.android.schedulers.AndroidSchedulers;
 
 import java.util.ArrayList;
@@ -53,10 +55,10 @@ public class NewsFragment extends BaseFragment {
 
 	private static final int PAGE_SIZE = 50;
 
-	@InjectView(R.id.list)
+	@Bind(R.id.list)
 	RecyclerView recyclerView;
 
-	@InjectView(android.R.id.empty)
+	@Bind(android.R.id.empty)
 	TextView empty;
 
 
@@ -78,8 +80,10 @@ public class NewsFragment extends BaseFragment {
 
 	@Override
 	public void onViewCreated(final View view, final Bundle b) {
-		ButterKnife.inject(this, view);
+		ButterKnife.bind(this, view);
 		setHasOptionsMenu(true);
+
+		//view.setNestedScrollingEnabled(true);
 
 		initList();
 
@@ -93,6 +97,11 @@ public class NewsFragment extends BaseFragment {
 
 		/*if (b != null)
 			lastPosition = b.getInt("position");*/
+
+		ActionBar ab = ((AppCompatActivity) getActivity()).getSupportActionBar();
+		ab.setDisplayShowTitleEnabled(true);
+		ab.setTitle(R.string.news);
+		//ab.setDisplayUseLogoEnabled(true);
 
 		super.onViewCreated(view, b);
 	}
@@ -122,8 +131,10 @@ public class NewsFragment extends BaseFragment {
 			}
 		};
 		postsChecker = rest.getFreshNews();
-		AndroidObservable.bindFragment(this, postsChecker);
-		postsChecker.observeOn(AndroidSchedulers.mainThread()).subscribe(postsCountSubscriber);
+		//AndroidObservable.bindFragment(this, postsChecker);
+		postsChecker.observeOn(AndroidSchedulers.mainThread())
+		            .compose(bindToLifecycle())
+				    .subscribe(postsCountSubscriber);
 
 	}
 
@@ -146,7 +157,7 @@ public class NewsFragment extends BaseFragment {
 				lastPos -> loadMoreNews(getOldestNext()));
 		recyclerView.setOnScrollListener(scrollListener);
 		if (adapter == null) {
-			adapter = new NewsRecyclerAdapter(new ArrayList<>(), (OnScrollBottomRecyclerViewListener) scrollListener);
+			adapter = new NewsRecyclerAdapter(new ArrayList<>(), (OnScrollBottomRecyclerViewListener) scrollListener, recyclerView);
 			recyclerView.setAdapter(adapter);
 		} else
 			adapter.setItems(new ArrayList<>());
@@ -158,7 +169,8 @@ public class NewsFragment extends BaseFragment {
 	public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
 		inflater.inflate(R.menu.news, menu);
-		FilterActionProvider p = (FilterActionProvider) menu.findItem(R.id.filter).getActionProvider();
+
+		FilterActionProvider p = (FilterActionProvider) MenuItemCompat.getActionProvider(menu.findItem(R.id.filter));
 		p.init(Filter.TYPE_POSTS);
 	}
 
@@ -371,6 +383,7 @@ public class NewsFragment extends BaseFragment {
 	public static class NewsRecyclerAdapter extends RecyclerView.Adapter<Holder> {
 
 		private static final int MAX_SIZE = 200;
+		private final RecyclerView recycler;
 		private Point displaySize;
 		private List<News> data;
 		private Picasso picasso;
@@ -382,13 +395,13 @@ public class NewsFragment extends BaseFragment {
 		protected Interpolator interpolator;
 
 
-		private NewsRecyclerAdapter(List<News> data, OnScrollBottomRecyclerViewListener sl) {
+		private NewsRecyclerAdapter(List<News> data, OnScrollBottomRecyclerViewListener sl, RecyclerView rv) {
 			this.data = data;
 			picasso = Picasso.with(App.instance());
 			setHasStableIds(true);
-
+			recycler = rv;
 			// anim init
-			initTime = System.currentTimeMillis();
+			resetInitTime();
 			scrollListener = sl;
 			previousPostition = -1;
 			interpolator = new DecelerateInterpolator();
@@ -396,6 +409,10 @@ public class NewsFragment extends BaseFragment {
 			displaySize = new Point();
 			wm.getDefaultDisplay().getSize(displaySize);
 			//
+		}
+
+		public void resetInitTime(){
+			initTime = System.currentTimeMillis();
 		}
 
 
@@ -414,7 +431,7 @@ public class NewsFragment extends BaseFragment {
 
 		public void setPreviousPostition(final int previousPostition) {
 			this.previousPostition = previousPostition;
-			initTime = System.currentTimeMillis();
+			resetInitTime();
 		}
 
 
@@ -483,12 +500,14 @@ public class NewsFragment extends BaseFragment {
 					String imageUrl = null;
 					switch (a.type) {
 						case Attachment.TYPE_PHOTO:
-							imageUrl = a.photo.photo_604;
-							photos.add(new PhotoData(imageUrl, a.photo.width, a.photo.height, PhotoData.TYPE_PHOTO, a.photo.id));
+							if (a.photo!=null) {
+								imageUrl = a.photo.photo_604;
+								photos.add(new PhotoData(imageUrl, a.photo.width, a.photo.height, PhotoData.TYPE_PHOTO, a.photo.id));
+							}
 							break;
 
 						case Attachment.TYPE_VIDEO:
-							imageUrl = Observable.from(a.video.photo_640, a.video.photo_320, a.video.photo_130).toBlocking().first(pic -> pic != null);
+							imageUrl = Observable.just(a.video.photo_640, a.video.photo_320, a.video.photo_130).toBlocking().first(pic -> pic != null);
 							PhotoData pd = new PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_VIDEO, a.video.id);
 							photos.add(pd);
 							break;
@@ -538,17 +557,17 @@ public class NewsFragment extends BaseFragment {
 					photos.add(new PhotoData(photo.photo_604, photo.width, photo.height, PhotoData.TYPE_PHOTO, photo.id));
 				}
 
-			if (photos.size() != 0) {
+			if (photos.size() != 0/* && !isScrolling()*/) {
 				h.flow.setVisibility(View.VISIBLE);
 				DisplayMetrics displayMetrics = App.instance().getResources().getDisplayMetrics();
 				int size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance(), 28);
-				loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(p));
+				loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(p), true);
 			} else
 				h.flow.setVisibility(View.GONE);
 
 			// animation
 			View v = h.card;
-			if (initTime + 500 < System.currentTimeMillis() && p > previousPostition) {
+			if (initTime + 500 < System.currentTimeMillis() && p > previousPostition && isScrolling()) {
 				int speed = (int) toDips(v.getContext(), scrollListener.getSpeed());
 				Utils.dp(v.getContext(), scrollListener.getSpeed());
 
@@ -571,7 +590,12 @@ public class NewsFragment extends BaseFragment {
 		}
 
 
-		public static void loadImages(int size, final FlowLayout flow, Iterator<View> imagesIterator, final List<PhotoData> photos, long itemId) {
+		private boolean isScrolling() {
+			return recycler.getScrollState() == RecyclerView.SCROLL_STATE_SETTLING || recycler.getScrollState() == RecyclerView.SCROLL_STATE_DRAGGING;
+		}
+
+
+		public static void loadImages(int size, final FlowLayout flow, Iterator<View> imagesIterator, final List<PhotoData> photos, long itemId, boolean loadPhotos) {
 			//L.v("item id "+itemId);
 			flow.removeAllViews();
 			Utils.toggleView(flow, photos.size() != 0);
@@ -601,7 +625,11 @@ public class NewsFragment extends BaseFragment {
 
 					img.setLayoutParams(lp);
 					flow.addView(img);
-					Picasso.with(flow.getContext()).load(photo.url).placeholder(img.placeholder).into(img);
+					if (loadPhotos)
+						Picasso.with(flow.getContext()).load(photo.url).placeholder(img.placeholder).into(img);
+					else
+						img.setImageDrawable(img.placeholder);
+
 					img.setOnClickListener(v -> {
 						if (photo.type == PhotoData.TYPE_PHOTO) {
 							Intent i = new Intent(v.getContext(), PhotosActivity.class);
@@ -701,47 +729,47 @@ public class NewsFragment extends BaseFragment {
 
 	public static class Holder extends RecyclerView.ViewHolder {
 
-		/*@InjectView(R.id.image)
+		/*@Bind(R.id.image)
 		public FillImageView mainImage;*/
-		@InjectView(R.id.avatar)
+		@Bind(R.id.avatar)
 		public ImageView avatar;
-		@InjectView(R.id.repost_avatar)
+		@Bind(R.id.repost_avatar)
 		public ImageView repostAvatar;
-		@InjectView(R.id.text)
+		@Bind(R.id.text)
 		public TextView text;
-		@InjectView(R.id.title)
+		@Bind(R.id.title)
 		public TextView title;
-		@InjectView(R.id.repost_title)
+		@Bind(R.id.repost_title)
 		public TextView repostTitle;
-		@InjectView(R.id.repost_date)
+		@Bind(R.id.repost_date)
 		public TextView repostDate;
-		@InjectView(R.id.likes)
+		@Bind(R.id.likes)
 		public CheckedTextView likes;
-		@InjectView(R.id.comments)
+		@Bind(R.id.comments)
 		public CheckedTextView comments;
-		@InjectView(R.id.reposts)
+		@Bind(R.id.reposts)
 		public CheckedTextView reposts;
-		@InjectView(R.id.date)
+		@Bind(R.id.date)
 		public TextView date;
-		@InjectView(R.id.signer)
+		@Bind(R.id.signer)
 		public TextView signer;
-		@InjectView(R.id.link_primary)
+		@Bind(R.id.link_primary)
 		public TextView linkPrimary;
-		@InjectView(R.id.link_secondary)
+		@Bind(R.id.link_secondary)
 		public TextView linkSecondary;
-		@InjectView(R.id.expand)
+		@Bind(R.id.expand)
 		public TextView expand;
-		@InjectView(R.id.link)
+		@Bind(R.id.link)
 		public View linkContainer;
-		@InjectView(R.id.overflow)
+		@Bind(R.id.overflow)
 		public ImageView overflow;
-		@InjectView(R.id.header)
+		@Bind(R.id.header)
 		public View header;
-		@InjectView(R.id.repost_header)
+		@Bind(R.id.repost_header)
 		public View repostHeader;
-		@InjectView(R.id.card)
+		@Bind(R.id.card)
 		public View card;
-		@InjectView(R.id.flow)
+		@Bind(R.id.flow)
 		public FlowLayout flow;
 
 		private NewsRecyclerAdapter adapter;
@@ -750,14 +778,13 @@ public class NewsFragment extends BaseFragment {
 
 		public Holder(final View v, NewsRecyclerAdapter a) {
 			super(v);
-			ButterKnife.inject(this, v);
+			ButterKnife.bind(this, v);
 			adapter = a;
 
 			comments.setOnClickListener(this::onClick);
 			text.setOnClickListener(this::onTextClick);
 			expand.setOnClickListener(this::onTextClick);
 			likes.setOnClickListener(this::onLikeClick);
-			comments.setOnClickListener(this::onClick);
 			reposts.setOnClickListener(this::onClick);
 			//mainImage.setOnClickListener(this::onClick);
 			linkContainer.setOnClickListener(this::onLinkClick);

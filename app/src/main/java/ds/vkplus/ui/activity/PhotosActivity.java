@@ -1,15 +1,15 @@
 package ds.vkplus.ui.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import com.squareup.picasso.Picasso;
 import de.keyboardsurfer.android.widget.crouton.LifecycleCallback;
 import ds.vkplus.Constants;
@@ -32,9 +32,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class PhotosActivity extends Activity {
+public class PhotosActivity extends AppCompatActivity {
 
-	@InjectView(R.id.viewpager)
+	@Bind(R.id.viewpager)
 	ViewPager viewPager;
 
 
@@ -42,7 +42,7 @@ public class PhotosActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_photos);
-		ButterKnife.inject(this);
+		ButterKnife.bind(this);
 
 		Collection<Attachment> attachments = null;
 		long id = getIntent().getLongExtra(Constants.KEY_POST_ID, -1);

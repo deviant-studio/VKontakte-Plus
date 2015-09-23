@@ -1,14 +1,15 @@
 package ds.vkplus.ui.activity;
 
-import android.app.ActionBar;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import com.trello.rxlifecycle.components.support.RxFragment;
 import ds.vkplus.eventbus.EventBus;
 import ds.vkplus.network.RestService;
 import ds.vkplus.ui.view.RefreshButton;
 
-abstract public class BaseFragment extends Fragment {
+abstract public class BaseFragment extends RxFragment {
 
 	protected RestService rest = RestService.get();
 	protected RefreshButton refreshButton;
@@ -18,9 +19,13 @@ abstract public class BaseFragment extends Fragment {
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		refreshButton = new RefreshButton(getActivity());
-		ActionBar ab = getActivity().getActionBar();
-		ab.setCustomView(refreshButton);
+		ActionBar ab = ((AppCompatActivity) getActivity()).getSupportActionBar();
 		ab.setDisplayShowCustomEnabled(true);
+		ab.setCustomView(refreshButton);
+		//ab.setDisplayShowHomeEnabled(true);
+		//ab.setDisplayUseLogoEnabled(true);
+		//ab.setDisplayHomeAsUpEnabled(true);
+
 		refreshButton.setOnClickListener(v->onRefresh());
 		//setRetainInstance(true);
 	}

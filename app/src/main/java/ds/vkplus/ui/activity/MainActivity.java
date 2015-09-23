@@ -1,10 +1,13 @@
 package ds.vkplus.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import ds.vkplus.R;
 import ds.vkplus.model.ApiResponse;
@@ -12,15 +15,21 @@ import ds.vkplus.network.RestService;
 import ds.vkplus.utils.L;
 
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends AppCompatActivity {
 
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		setTitle(R.string.news);
+		//setTitle(R.string.news);
+
+		ActionBar ab = getSupportActionBar();
+		//ab.setHideOnContentScrollEnabled(true);
+		ab.setIcon(R.drawable.logo);
+		View v=getActionBarView();
 
 		if (savedInstanceState == null) {
 			showFragment();
@@ -32,6 +41,13 @@ public class MainActivity extends FragmentActivity {
 		           .subscribe(groups -> {
 			           L.v("groups fetched successfully");
 		           }, Throwable::printStackTrace);
+	}
+
+	public View getActionBarView() {
+		Window window = getWindow();
+		View v = window.getDecorView();
+		int resId = getResources().getIdentifier("action_bar_container", "id", "android");
+		return v.findViewById(resId);
 	}
 
 
@@ -68,6 +84,10 @@ public class MainActivity extends FragmentActivity {
 						           },
 						           () -> L.v("completed"));
 
+				break;
+
+			case R.id.debug_layout:
+				startActivity(new Intent(this,TempActivity.class));
 				break;
 
 		}

@@ -5,16 +5,14 @@ import android.support.v7.widget.RecyclerView;
 import ds.vkplus.callback.IntCallback;
 import ds.vkplus.utils.L;
 
-import static android.widget.AbsListView.OnScrollListener.SCROLL_STATE_IDLE;
-
-public class OnScrollBottomRecyclerViewListener implements RecyclerView.OnScrollListener {
+public class OnScrollBottomRecyclerViewListener extends RecyclerView.OnScrollListener {
 
 	private IntCallback cb;
 	private LinearLayoutManager lm;
 
 	public int prevLast = 0;
 	private int speed = 0;
-	private int scrollState;
+	//private int scrollState;
 	private int last;
 	private int total;
 
@@ -22,17 +20,6 @@ public class OnScrollBottomRecyclerViewListener implements RecyclerView.OnScroll
 	public OnScrollBottomRecyclerViewListener(LinearLayoutManager lm, final IntCallback callback) {
 		cb = callback;
 		this.lm = lm;
-	}
-
-
-	@Override
-	public void onScrollStateChanged(final int i) {
-		scrollState = i;
-		//L.v("state=" + i);
-		if ((total < 3 && scrollState == SCROLL_STATE_IDLE)) {
-			L.v("onBottom");
-			cb.onResult(last);
-		}
 	}
 
 
@@ -44,8 +31,32 @@ public class OnScrollBottomRecyclerViewListener implements RecyclerView.OnScroll
 	}
 
 
+	/*public boolean isScrolling() {
+		L.v("scroll state="+scrollState);
+		return scrollState != SCROLL_STATE_IDLE;
+	}*/
+
+
 	@Override
-	public void onScrolled(final int i, final int speed) {
+	public void onScrollStateChanged(final RecyclerView recyclerView, final int newState) {
+		//scrollState = newState;
+		L.v("state=" + newState);
+		if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+			//recyclerView.getAdapter().notifyItemRangeChanged(lm.findFirstVisibleItemPosition(), lm.findLastVisibleItemPosition());
+
+			if (total < 3) {
+				L.v("onBottom");
+				cb.onResult(last);
+			} /*else {
+				((NewsFragment.NewsRecyclerAdapter) recyclerView.getAdapter()).resetInitTime();
+				recyclerView.getAdapter().notifyItemRangeChanged(lm.findFirstVisibleItemPosition(), lm.findLastVisibleItemPosition());
+			}*/
+		}
+	}
+
+
+	@Override
+	public void onScrolled(final RecyclerView recyclerView, final int dx, final int dy) {
 		if (lm != null) {
 			last = lm.findLastCompletelyVisibleItemPosition();
 			if (last == -1)

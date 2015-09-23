@@ -1,12 +1,17 @@
 package ds.vkplus.actionprovider;
 
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.view.*;
+import android.support.v4.view.ActionProvider;
+import android.support.v7.widget.ListPopupWindow;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
-import android.widget.ListPopupWindow;
 import android.widget.PopupWindow;
 import ds.vkplus.R;
 import ds.vkplus.db.DBHelper;
@@ -102,9 +107,9 @@ public class FilterActionProvider extends ActionProvider {
 	}
 
 
-	private Context getContext() {
+	/*private Context getContext() {
 		return ctx;
-	}
+	}*/
 
 
 	@Override

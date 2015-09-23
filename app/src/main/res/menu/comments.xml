@@ -5,10 +5,10 @@
 
     <item
         android:id="@+id/filter"
-        android:icon="@drawable/ic_action_filter"
+        android:icon="@drawable/ic_filter"
         android:title="@string/filter"
-        android:actionProviderClass="ds.vkplus.actionprovider.FilterActionProvider"
-        android:showAsAction="always" />
+        app:actionProviderClass="ds.vkplus.actionprovider.FilterActionProvider"
+        app:showAsAction="always" />
 
 
 </menu>
