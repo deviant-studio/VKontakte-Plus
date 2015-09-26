@@ -2,7 +2,8 @@
 <resources>
 
     <array name="overflow_items">
-        <item id="@+id/share">Share</item>
+        <item>Share</item>
+        <item>Copy to Clipboard</item>
         <item>Debug</item>
     </array>
 

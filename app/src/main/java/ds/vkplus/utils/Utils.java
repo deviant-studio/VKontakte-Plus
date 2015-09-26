@@ -1,6 +1,8 @@
 package ds.vkplus.utils;
 
 import android.app.ActivityManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -118,5 +120,11 @@ public class Utils {
 
 	public static String getPostUrl(News post) {
 		return "https://vk.com/wall" + post.source_id + "_" + post.post_id;
+	}
+
+	public static void copyNoteUrlToClipboard(Context ctx, String text) {
+		ClipboardManager clipboard = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+		ClipData clip = ClipData.newPlainText("note", text);
+		clipboard.setPrimaryClip(clip);
 	}
 }

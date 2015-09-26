@@ -797,10 +797,14 @@ public class NewsFragment extends BaseFragment {
 				popup.setAdapter(ArrayAdapter.createFromResource(view.getContext(), R.array.overflow_items, android.R.layout.simple_list_item_1));
 				popup.setOnItemClickListener((parent, view2, position, id) -> {
 					switch (position) {
-						case 0:
+						case 0: // share
 							Utils.shareText(view.getContext(), Utils.getPostUrl(getItem()));
 							break;
-						case 1:// debug
+						case 1: // copy to clipboard
+							Toast.makeText(view.getContext(), "Copied to Clipboard", 0).show();
+							Utils.copyNoteUrlToClipboard(view.getContext(), getItem().text);
+							break;
+						case 2:// debug
 							L.v("item=" + getItem().toString());
 							break;
 					}

@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import butterknife.Bind;
@@ -21,6 +24,7 @@ import ds.vkplus.model.News;
 import ds.vkplus.model.PhotoData;
 import ds.vkplus.ui.Croutons;
 import ds.vkplus.utils.L;
+import ds.vkplus.utils.Utils;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -34,8 +38,8 @@ import java.util.List;
 
 public class PhotosActivity extends AppCompatActivity {
 
-	@Bind(R.id.viewpager)
-	ViewPager viewPager;
+	@Bind(R.id.viewpager) ViewPager viewPager;
+	@Bind(R.id.toolbar) Toolbar toolbar;
 
 
 	@Override
@@ -43,6 +47,8 @@ public class PhotosActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_photos);
 		ButterKnife.bind(this);
+
+		setSupportActionBar(toolbar);
 
 		Collection<Attachment> attachments = null;
 		long id = getIntent().getLongExtra(Constants.KEY_POST_ID, -1);
@@ -91,9 +97,8 @@ public class PhotosActivity extends AppCompatActivity {
 	}
 
 
-/*	@Override
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.photos, menu);
 		return true;
 	}
@@ -101,15 +106,13 @@ public class PhotosActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+		if (id == R.id.share) {
+			PhotoData data = ((PhotosAdapter) viewPager.getAdapter()).getItemAtPos(viewPager.getCurrentItem());
+			Utils.shareText(this, data.extra);
 		}
 		return super.onOptionsItemSelected(item);
-	}*/
+	}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -127,6 +130,11 @@ public class PhotosActivity extends AppCompatActivity {
 		@Override
 		public int getCount() {
 			return data.size();
+		}
+
+
+		public PhotoData getItemAtPos(int index) {
+			return data.get(index);
 		}
 
 
