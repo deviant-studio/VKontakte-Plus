@@ -18,7 +18,7 @@
         android:layout_alignBottom="@+id/repost_avatar"
         android:layout_alignTop="@+id/repost_avatar" />
 
-    <ds.vkplus.ui.view.RoundImageView
+    <ImageView
         android:id="@+id/repost_avatar"
         android:layout_width="36dp"
         android:layout_height="36dp"

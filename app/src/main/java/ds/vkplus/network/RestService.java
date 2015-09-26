@@ -21,7 +21,6 @@ import rx.subjects.ReplaySubject;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class RestService {
 
@@ -308,7 +307,7 @@ public class RestService {
 	 *
 	 * @return
 	 */
-	public Observable<Integer> getFreshNews() {
+	/*public Observable<Integer> getFreshNews() {
 		L.v("start getting count");
 		String filters = "post,photo,photo_tag,friend,note";
 		int interval = Utils.isWifi() ? 10 : 120;
@@ -332,7 +331,7 @@ public class RestService {
 						.observeOn(AndroidSchedulers.mainThread());
 		return intervals;
 
-	}
+	}*/
 
 
 	public Observable<String> getVideo(final Video v) {

@@ -7,7 +7,7 @@
     android:paddingRight="10dp"
     android:paddingTop="12dp">
 
-    <ds.vkplus.ui.view.RoundImageView
+    <ImageView
         android:id="@+id/icon"
         android:layout_width="48dp"
         android:layout_height="48dp"

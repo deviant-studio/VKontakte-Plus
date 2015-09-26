@@ -22,6 +22,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 import ds.vkplus.App;
 import ds.vkplus.Constants;
 import ds.vkplus.R;
@@ -34,6 +35,7 @@ import ds.vkplus.eventbus.events.UrlClickEvent;
 import ds.vkplus.model.*;
 import ds.vkplus.model.Filter;
 import ds.vkplus.network.RestService;
+import ds.vkplus.ui.CircleTransform;
 import ds.vkplus.ui.Croutons;
 import ds.vkplus.ui.OnScrollBottomRecyclerViewListener;
 import ds.vkplus.ui.view.FixedSizeImageView;
@@ -44,7 +46,6 @@ import ds.vkplus.utils.T;
 import ds.vkplus.utils.Utils;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,7 +94,7 @@ public class NewsFragment extends BaseFragment {
 
 		loadNews();
 
-		runCountChecker();
+		//runCountChecker();
 
 		/*if (b != null)
 			lastPosition = b.getInt("position");*/
@@ -107,7 +108,8 @@ public class NewsFragment extends BaseFragment {
 	}
 
 
-	private void runCountChecker() {
+	// doesnt work as expected
+	/*private void runCountChecker() {
 		postsCountSubscriber = new Subscriber<Integer>() {
 			@Override
 			public void onCompleted() { }
@@ -136,7 +138,7 @@ public class NewsFragment extends BaseFragment {
 		            .compose(bindToLifecycle())
 				    .subscribe(postsCountSubscriber);
 
-	}
+	}*/
 
 
 	@Override
@@ -220,7 +222,6 @@ public class NewsFragment extends BaseFragment {
 	@Override
 	protected void onRefresh() {
 		toggleProgress(true);
-		//initList();
 		if (newPostsCount == 0 || currentSourceId != null) {
 			rest.work(subscriber -> {
 				try {
@@ -233,25 +234,12 @@ public class NewsFragment extends BaseFragment {
 				}
 			})
 			    .subscribe(res -> {
-				    //toggleProgress(false);
 				    loadNews();
 			    }, e -> Croutons.prepare().message("Failed to drop database").show(getActivity()));
 		} else {
-			loadNews(); //
+			loadNews();
 		}
 	}
-
-
-	/*private PostData getBottomNext(int pos) {
-		L.v("next pos=" + pos);
-		long postId = adapter.getItemId(pos);
-		return DBHelper.instance().fetchNextByPostId(postId);
-	}
-
-
-	private PostData getLatestNext() {
-		return DBHelper.instance().fetchLatestNext();
-	}*/
 
 
 	private PostData getOldestNext() {
@@ -352,8 +340,9 @@ public class NewsFragment extends BaseFragment {
 		News item = e.item;
 		switch (e.viewId) {
 			case R.id.comments:
-				//if (item.commentsCount > 0) {
+				//Henson.with(getActivity()).gotoCommentsFragment()
 				Intent i = new Intent(getActivity(), CommentsActivity.class);
+
 				i.putExtra(Constants.KEY_POST_ID, item.post_id);
 				i.putExtra(Constants.KEY_OWNER_ID, item.source_id);
 				startActivity(i);
@@ -393,6 +382,7 @@ public class NewsFragment extends BaseFragment {
 		protected OnScrollBottomRecyclerViewListener scrollListener;
 		protected long animDuration;
 		protected Interpolator interpolator;
+		private Transformation circleTransform=new CircleTransform();
 
 
 		private NewsRecyclerAdapter(List<News> data, OnScrollBottomRecyclerViewListener sl, RecyclerView rv) {
@@ -447,7 +437,9 @@ public class NewsFragment extends BaseFragment {
 			h.reposts.setText(String.valueOf(item.repostsCount));
 			if (item.getProducer() != null) {
 				h.title.setText(item.getProducer().getName());
-				picasso.load(item.getProducer().getThumb()).into(h.avatar);
+				picasso.load(item.getProducer().getThumb())
+				       .transform(circleTransform)
+				       .into(h.avatar);
 			}
 
 
@@ -469,7 +461,9 @@ public class NewsFragment extends BaseFragment {
 				News repost = item.copy_history.iterator().next();
 				h.repostTitle.setText(repost.getProducer().getName());
 				h.repostDate.setText(DateUtils.getRelativeTimeSpanString(repost.date * 1000));
-				picasso.load(repost.getProducer().getThumb()).into(h.repostAvatar);
+				picasso.load(repost.getProducer().getThumb())
+				       .transform(circleTransform)
+				       .into(h.repostAvatar);
 				item.text = repost.text;
 				//item.isExpanded = repost.isExpanded;
 				//L.v("repost: "+repost.text);

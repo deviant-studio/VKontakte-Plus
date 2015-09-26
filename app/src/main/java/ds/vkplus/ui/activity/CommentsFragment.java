@@ -11,8 +11,11 @@ import android.view.*;
 import android.widget.*;
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import com.f2prateek.dart.Dart;
+import com.f2prateek.dart.InjectExtra;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 import ds.vkplus.Constants;
 import ds.vkplus.R;
 import ds.vkplus.actionprovider.FilterActionProvider;
@@ -21,6 +24,7 @@ import ds.vkplus.eventbus.events.FilterEvent;
 import ds.vkplus.eventbus.events.UrlClickEvent;
 import ds.vkplus.model.*;
 import ds.vkplus.model.Filter;
+import ds.vkplus.ui.CircleTransform;
 import ds.vkplus.ui.OnScrollBottomListener;
 import ds.vkplus.ui.view.FixedSizeImageView;
 import ds.vkplus.ui.view.FlowLayout;
@@ -56,8 +60,8 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	private boolean loadMore = false;
 	private CommentsAdapter adapter;
 	private Subscriber<List<Comment>> subscriber;
-	private long postId;
-	private long ownerId;
+	@InjectExtra(Constants.KEY_POST_ID) long postId = 0;
+	@InjectExtra(Constants.KEY_OWNER_ID) long ownerId = 0;
 
 
 	@Override
@@ -73,8 +77,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 		setHasOptionsMenu(true);
 		content.setVisibility(View.GONE);
 
-		postId = getActivity().getIntent().getLongExtra(Constants.KEY_POST_ID, 0);
-		ownerId = getActivity().getIntent().getLongExtra(Constants.KEY_OWNER_ID, 0);
+		Dart.inject(this, getActivity().getIntent().getExtras());
 
 		list.setOnScrollListener(new OnScrollBottomListener(s -> {
 			/*if (loadMore)
@@ -300,6 +303,7 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 	public static class CommentsAdapter extends ArrayAdapter<Comment> {
 
 		private final Picasso picasso;
+		private Transformation circleTransform = new CircleTransform();
 
 
 		public CommentsAdapter(final Context context, List<Comment> data) {
@@ -338,7 +342,9 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 			h.likes.setText(item.likesCount > 0 ? ("+" + String.valueOf(item.likesCount)) : "");
 			h.likes.setChecked(item.likesUserLikes);
 			h.date.setText(DateUtils.getRelativeTimeSpanString(item.date * 1000));
-			picasso.load(item.getProducer().getThumb()).into(h.avatar);
+			picasso.load(item.getProducer().getThumb())
+			       .transform(circleTransform)
+			       .into(h.avatar);
 
 			h.link.setVisibility(View.GONE);
 			h.flow.setVisibility(View.GONE);
@@ -391,10 +397,10 @@ public class CommentsFragment extends BaseFragment implements AdapterView.OnItem
 
 				}
 
-				int size=-1;
+				int size = -1;
 				/*DisplayMetrics displayMetrics = App.instance().getResources().getDisplayMetrics();
 				size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance(), 28) / 8;*/
-				NewsFragment.NewsRecyclerAdapter.loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(position),true);
+				NewsFragment.NewsRecyclerAdapter.loadImages(size, h.flow, h.getViewsCache(), photos, getItemId(position), true);
 
 				// clicks
 

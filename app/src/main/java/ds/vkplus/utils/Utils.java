@@ -104,4 +104,12 @@ public class Utils {
 		NetworkInfo networkInfo = mgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		return networkInfo != null && networkInfo.isConnected();
 	}
+
+	public static void shareText(Context ctx, String text){
+		Intent sendIntent = new Intent();
+		sendIntent.setAction(Intent.ACTION_SEND);
+		sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+		sendIntent.setType("text/plain");
+		ctx.startActivity(sendIntent);
+	}
 }
