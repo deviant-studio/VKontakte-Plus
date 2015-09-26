@@ -112,11 +112,6 @@ public class FiltersDao extends AndroidDao<Filter, Integer> {
 		}
 
 
-		/*try {
-			update(item);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}*/
 
 	}
 
@@ -135,4 +130,8 @@ public class FiltersDao extends AndroidDao<Filter, Integer> {
 	}
 
 
+	public void deleteAll() throws SQLException {
+		delete(queryForAll());
+		clearObjectCache();
+	}
 }

@@ -1,6 +1,5 @@
 package ds.vkplus.network;
 
-import android.os.NetworkOnMainThreadException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ds.vkplus.auth.AccountHelper;
@@ -371,9 +370,7 @@ public class RestService {
 				.observeOn(Schedulers.io())
 				.map(groups -> {
 					try {
-						if (Utils.isMainThread()) {
-							throw new NetworkOnMainThreadException();
-						}
+						assert Utils.isMainThread();
 						AndroidDao<Group, Integer> dao = db.getDao(Group.class);
 						db.saveEntities(groups.items, dao);
 						List<Group> myGroups = db.fetchMyGroups();

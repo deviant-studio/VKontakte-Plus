@@ -20,8 +20,6 @@ public class Filter extends BaseDaoEnabled {
 
 	@DatabaseField(generatedId = true)
 	public int id;
-/*	@DatabaseField
-	public int parentId;*/
 	@DatabaseField
 	public String title;
 	@DatabaseField

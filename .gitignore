@@ -1,6 +1,7 @@
 .gradle
 gradle.properties
 local.properties
+fabric.properties
 gradlew*
 .idea
 *.iml

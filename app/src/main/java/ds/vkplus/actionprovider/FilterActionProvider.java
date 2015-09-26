@@ -3,9 +3,8 @@ package ds.vkplus.actionprovider;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v4.view.ActionProvider;
-import android.support.v7.widget.ListPopupWindow;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -56,16 +55,18 @@ public class FilterActionProvider extends ActionProvider {
 	private void performAction() {
 		L.v("click!");
 
-		ListPopupWindow popupList = new ListPopupWindow(getContext());
-		//popupList.set
-		PopupWindow popup = new PopupWindow(getContext());
+		final View content = LayoutInflater.from(getContext()).inflate(R.layout.popup_filters, null);
+		//PopupWindow popup = new PopupWindow(getContext());
+		final PopupWindow popup =new PopupWindow(content);
 		FilterExpandableListAdapter a = new FilterExpandableListAdapter(getContext(), filters);
 
 		a.setOnFilterUpdateListener(() -> postEvent(null));
 
-		ExpandableListView list = new ExpandableListView(getContext());
+
+		//ExpandableListView list = new ExpandableListView(getContext());
+		ExpandableListView list = (ExpandableListView) content.findViewById(R.id.expandable_list);
 		list.setAdapter(a);
-		list.setBackgroundColor(Color.WHITE);
+		//list.setBackgroundColor(Color.WHITE);
 		list.setGroupIndicator(null);
 		list.setItemsCanFocus(true);    // important
 		list.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
@@ -90,11 +91,11 @@ public class FilterActionProvider extends ActionProvider {
 				list.expandGroup(i);
 		}
 
-		popup.setContentView(list);
+		//popup.setContentView(list);
 		popup.setWidth(Utils.dp(getContext(), 280));
 		popup.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
 		popup.setFocusable(true);
-
+		popup.setBackgroundDrawable(new ColorDrawable());
 		popup.setOnDismissListener(() -> L.v("dismiss filter list"));
 
 		popup.showAsDropDown(anchor);

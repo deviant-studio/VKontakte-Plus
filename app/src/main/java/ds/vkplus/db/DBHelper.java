@@ -22,6 +22,8 @@ import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ds.vkplus.model.Filter.TYPE_POSTS;
+
 public class DBHelper extends DBHelperBase {
 
 	public static final Pattern NEXT_PATTERN = Pattern.compile("^(\\d+)/(-?\\d+)(?:_\\d+)?_(\\d+)_\\d+$");
@@ -564,5 +566,44 @@ public class DBHelper extends DBHelperBase {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+
+	public void refreshGroupsFilter(final List<Group> myGroups) {
+		L.v("groups: save %s groups", myGroups.size());
+		try {
+			Filter parent = filtersDao.queryBuilder()
+			                          .where()
+			                          .eq("filterType", TYPE_POSTS)
+			                          .and()
+			                          .eq("title", FILTER_BY_GROUP)
+			                          .queryForFirst();
+			if (parent == null)
+				return;
+
+			//filtersDao.deleteAll();
+			List<Filter> cacheds = filtersDao.queryBuilder()
+			                                 .where()
+			                                 .eq("parent_id", parent.id)
+			                                 .and()
+			                                 .eq("state", Filter.State.UNCHECKED)
+			                                 .query();
+
+			L.v("groups: delete %s filters",cacheds.size());
+			filtersDao.delete(cacheds);
+			filtersDao.clearObjectCache();
+
+			for (Group group : myGroups) {
+
+				new Filter(group.getName(), String.valueOf(-group.id), Filter.State.UNCHECKED, TYPE_POSTS, parent);
+				L.v("group %s saved", group.getName());
+			}
+
+
+			parent.update();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 }

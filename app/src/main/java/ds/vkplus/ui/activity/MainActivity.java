@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
 		RestService.get()
 		           .getGroups()
 		           .subscribe(groups -> {
-			           L.v("groups fetched successfully");
+			           L.v("groups: fetched successfully");
 		           }, Throwable::printStackTrace);
 	}
 
