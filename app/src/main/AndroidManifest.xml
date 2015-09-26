@@ -57,6 +57,9 @@
             android:label="@string/title_activity_temp" >
         </activity>
 
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="1f312301efd5023083b15d340b8963cbf0c8ad14" />
     </application>
 
 </manifest>

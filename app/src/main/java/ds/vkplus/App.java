@@ -1,6 +1,8 @@
 package ds.vkplus;
 
 import android.app.Application;
+import com.crashlytics.android.Crashlytics;
+import io.fabric.sdk.android.Fabric;
 
 public class App extends Application {
 
@@ -11,6 +13,7 @@ public class App extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		Fabric.with(this, new Crashlytics());
 		instance = this;
 
 		//VKSdk.initialize(listener, "APL4oJ9kK03xf8RBVJsX");
