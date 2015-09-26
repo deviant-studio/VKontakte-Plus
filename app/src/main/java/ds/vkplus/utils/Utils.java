@@ -13,6 +13,7 @@ import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.View;
 import ds.vkplus.App;
+import ds.vkplus.model.News;
 
 import java.util.List;
 
@@ -105,11 +106,17 @@ public class Utils {
 		return networkInfo != null && networkInfo.isConnected();
 	}
 
-	public static void shareText(Context ctx, String text){
+
+	public static void shareText(Context ctx, String text) {
 		Intent sendIntent = new Intent();
 		sendIntent.setAction(Intent.ACTION_SEND);
 		sendIntent.putExtra(Intent.EXTRA_TEXT, text);
 		sendIntent.setType("text/plain");
 		ctx.startActivity(sendIntent);
+	}
+
+
+	public static String getPostUrl(News post) {
+		return "https://vk.com/wall" + post.source_id + "_" + post.post_id;
 	}
 }

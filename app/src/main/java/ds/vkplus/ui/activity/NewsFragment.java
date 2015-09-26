@@ -145,7 +145,7 @@ public class NewsFragment extends BaseFragment {
 	public void onDestroy() {
 		super.onDestroy();
 
-		if (!postsCountSubscriber.isUnsubscribed())
+		if (postsCountSubscriber != null && !postsCountSubscriber.isUnsubscribed())
 			postsCountSubscriber.unsubscribe();
 	}
 
@@ -382,7 +382,7 @@ public class NewsFragment extends BaseFragment {
 		protected OnScrollBottomRecyclerViewListener scrollListener;
 		protected long animDuration;
 		protected Interpolator interpolator;
-		private Transformation circleTransform=new CircleTransform();
+		private Transformation circleTransform = new CircleTransform();
 
 
 		private NewsRecyclerAdapter(List<News> data, OnScrollBottomRecyclerViewListener sl, RecyclerView rv) {
@@ -401,7 +401,8 @@ public class NewsFragment extends BaseFragment {
 			//
 		}
 
-		public void resetInitTime(){
+
+		public void resetInitTime() {
 			initTime = System.currentTimeMillis();
 		}
 
@@ -494,7 +495,7 @@ public class NewsFragment extends BaseFragment {
 					String imageUrl = null;
 					switch (a.type) {
 						case Attachment.TYPE_PHOTO:
-							if (a.photo!=null) {
+							if (a.photo != null) {
 								imageUrl = a.photo.photo_604;
 								photos.add(new PhotoData(imageUrl, a.photo.width, a.photo.height, PhotoData.TYPE_PHOTO, a.photo.id));
 							}
@@ -720,6 +721,8 @@ public class NewsFragment extends BaseFragment {
 
 	}
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	public static class Holder extends RecyclerView.ViewHolder {
 
@@ -794,11 +797,11 @@ public class NewsFragment extends BaseFragment {
 				popup.setAdapter(ArrayAdapter.createFromResource(view.getContext(), R.array.overflow_items, android.R.layout.simple_list_item_1));
 				popup.setOnItemClickListener((parent, view2, position, id) -> {
 					switch (position) {
-						case 0: // debug
-							L.v("item=" + getItem().toString());
+						case 0:
+							Utils.shareText(view.getContext(), Utils.getPostUrl(getItem()));
 							break;
-						case 1:
-
+						case 1:// debug
+							L.v("item=" + getItem().toString());
 							break;
 					}
 					popup.dismiss();

@@ -124,6 +124,7 @@ dependencies {
     compile 'com.f2prateek.dart:henson:2.0.0-RC2-SNAPSHOT'
     apt 'com.f2prateek.dart:henson-processor:2.0.0-RC2-SNAPSHOT'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    compile 'com.facebook.stetho:stetho:+'
 
     compile 'ds.gendalf:gendalf:+'
     apt 'ds.gendalf:compiler:+'

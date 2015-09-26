@@ -237,13 +237,30 @@ public class DBHelper extends DBHelperBase {
 		if (a.getContent() == null)   // actually this shouldnt happen
 			return;
 
-		try {
-			attachmentsDao.create(a);
-			Dao dao = getDao(a.getContent().getClass());
-			dao.createOrUpdate(a.getContent());
-		} catch (SQLException e) {
-			e.printStackTrace();
+		if (!isAttachmentExist(a))
+			try {
+				attachmentsDao.create(a);
+				Dao dao = getDao(a.getContent().getClass());
+				dao.createOrUpdate(a.getContent());
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+	}
+
+
+	private boolean isAttachmentExist(final Attachment a) {
+		if (a.type.equals(Attachment.TYPE_PHOTO)) {
+			try {
+				return attachmentsDao.queryBuilder()
+				                     .where()
+				                     .eq("news_id", a.news.id)
+				                     .and()
+				                     .eq("photo_id", ((Photo) a.getContent()).id).countOf() == 1;
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
+		return false;
 	}
 
 
