@@ -59,7 +59,7 @@ public class LayoutUtils {
 				ratios.add(ratio);
 			}
 			if (bad) {
-				L.e("layout error");
+				L.INSTANCE$.e("layout error");
 				for (final PhotoData p : photos) {
 					p.setViewSize(scale(135.0f), scale(100.0f), false, false);
 				}
@@ -84,8 +84,8 @@ public class LayoutUtils {
 				width = areaWidth;
 				height = areaHeight;
 			} else {
-				width = Utils.dp(App.instance(),240);
-				height = Utils.dp(App.instance(),160);
+				width = Utils.INSTANCE$.dp(App.Companion.getInstance(), 240);
+				height = Utils.INSTANCE$.dp(App.Companion.getInstance(), 160);
 			}
 			final float areaRatio = width / height;
 			if (size == 1) {
@@ -242,7 +242,7 @@ public class LayoutUtils {
 
 
 	public static int scale(float paramFloat) {
-		float displayDensity = App.instance().getResources().getDisplayMetrics().density;
+		float displayDensity = App.Companion.getInstance().getResources().getDisplayMetrics().density;
 		return Math.round(paramFloat * displayDensity);
 	}
 }

@@ -40,7 +40,7 @@ public class FixedSizeImageView extends ImageView {
 			int w2 = displayW / 2;
 			int h2 = displayH / 2;
 			int size = Math.min(displayW / 4, displayH / 4);
-			size = Math.min(Utils.dp(getContext(), 48), size);
+			size = Math.min(Utils.INSTANCE$.dp(getContext(), 48), size);
 			playIcon.setBounds(w2 - size / 2, h2 - size / 2, w2 + size / 2, h2 + size / 2);
 			playIcon.draw(canvas);
 		}

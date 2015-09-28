@@ -6,7 +6,6 @@ import com.j256.ormlite.table.DatabaseTable;
 import ds.vkplus.db.DBHelper;
 import ds.vkplus.db.extras.AndroidDao;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
 @DatabaseTable(daoClass = AndroidDao.class)
@@ -53,11 +52,7 @@ public class Comment {
 
 	public Producer getProducer() {
 		if (producer == null) {
-			try {
-				producer = DBHelper.instance().getProducerById(from_id);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			producer = DBHelper.Companion.getInstance().getProducerById(from_id);
 		}
 
 		return producer;

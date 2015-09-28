@@ -1,10 +1,9 @@
 apply plugin: 'com.android.application'
-// This does not break the build when Android Studio is missing the JRebel for Android plugin.
 apply plugin: 'com.zeroturnaround.jrebel.android'
 apply plugin: 'io.fabric'
 apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'kotlin-android'
-apply plugin: 'com.neenbedankt.android-apt'
+//apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'com.jakewharton.hugo'
 
 android {
@@ -99,20 +98,24 @@ android {
     }
 }
 
+kapt {
+    generateStubs = false
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'io.reactivex:rxjava:1.0.14'
     compile 'io.reactivex:rxandroid:1.0.1'
+    compile 'io.reactivex:rxkotlin:0.22.13'
     compile 'com.trello:rxlifecycle:0.3.0'
     compile 'com.trello:rxlifecycle-components:0.3.0'
     compile 'com.jakewharton.rxbinding:rxbinding:0.2.0'
     compile 'com.squareup.retrofit:retrofit:1.9.+'
-    compile 'com.squareup.dagger:dagger:+'
-    provided 'com.squareup.dagger:dagger-compiler:+'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup:otto:1.3.8'
     compile 'com.googlecode.android-query:android-query:0.25.9'
     compile 'com.jakewharton:butterknife:7.0.1'
+    kapt 'com.jakewharton:butterknife:7.0.1'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.5.0'
     compile 'com.android.support:appcompat-v7:23.+'
     compile 'com.android.support:cardview-v7:23.+'
@@ -121,15 +124,15 @@ dependencies {
     compile 'com.j256.ormlite:ormlite-android:4.48'
     compile 'de.keyboardsurfer.android.widget:crouton:1.8.5@aar'
     compile ('com.mcxiaoke.photoview:library:1.2.3')
-    compile 'com.f2prateek.dart:dart:2.0.0-RC1'
-    apt 'com.f2prateek.dart:dart-processor:2.0.0-RC1'
-    compile 'com.f2prateek.dart:henson:2.0.0-RC2-SNAPSHOT'
-    apt 'com.f2prateek.dart:henson-processor:2.0.0-RC2-SNAPSHOT'
+    //compile 'com.f2prateek.dart:dart:2.0.0-RC1'
+    //apt 'com.f2prateek.dart:dart-processor:2.0.0-RC1'
+    //compile 'com.f2prateek.dart:henson:2.0.0-RC2-SNAPSHOT'
+    //apt 'com.f2prateek.dart:henson-processor:2.0.0-RC2-SNAPSHOT'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     compile 'com.facebook.stetho:stetho:+'
 
-    compile 'ds.gendalf:gendalf:+'
-    apt 'ds.gendalf:compiler:+'
+    //compile 'ds.gendalf:gendalf:+'
+    //apt 'ds.gendalf:compiler:+'
 
     compile('com.crashlytics.sdk.android:crashlytics:2.5.2@aar') {
         transitive = true;

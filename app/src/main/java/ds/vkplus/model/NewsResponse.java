@@ -43,7 +43,7 @@ public class NewsResponse {
 		final Producer[] result = new Producer[1];
 		Observable.concat(Observable.from(groups), Observable.from(profiles))
 		          .first(i -> i.getId() == id)
-		          .subscribe(i -> result[0] = i, e -> L.e("producer not found!"));
+		          .subscribe(i -> result[0] = i, e -> L.INSTANCE$.e("producer not found!"));
 		return result[0];
 	}
 

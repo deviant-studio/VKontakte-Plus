@@ -7,7 +7,6 @@ import com.j256.ormlite.table.DatabaseTable;
 import ds.vkplus.db.DBHelper;
 import ds.vkplus.db.extras.AndroidDao;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
 @DatabaseTable(daoClass = AndroidDao.class)
@@ -104,11 +103,7 @@ public class News extends BaseDaoEnabled {
 	//@DebugLog
 	public Producer getProducer() {
 		if (producer == null) {
-			try {
-				producer = DBHelper.instance().getProducerById(source_id);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			producer = DBHelper.Companion.getInstance().getProducerById(source_id);
 		}
 
 		return producer;
@@ -118,11 +113,7 @@ public class News extends BaseDaoEnabled {
 	//@DebugLog
 	public Producer getSigner() {
 		if (signer == null && signer_id != 0) {
-			try {
-				signer = DBHelper.instance().getProducerById(signer_id);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			signer = DBHelper.Companion.getInstance().getProducerById(signer_id);
 		}
 
 		return signer;

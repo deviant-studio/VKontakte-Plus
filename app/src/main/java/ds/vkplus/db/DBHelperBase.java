@@ -84,7 +84,7 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	@Override
 	public void onCreate(final SQLiteDatabase database, final ConnectionSource connectionSource) {
-		L.v("onCreate DB");
+		L.INSTANCE$.v("onCreate DB");
 		try {
 			for (Class cls : classes) {
 				TableUtils.createTable(connectionSource, cls);
@@ -92,14 +92,14 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 			TableUtils.createTable(connectionSource, Filter.class);
 			generateFilters();
 		} catch (SQLException e) {
-			L.e("Can't create database");
+			L.INSTANCE$.e("Can't create database");
 			e.printStackTrace();
 		}
 	}
 
 
 	protected void generateFilters() throws SQLException {
-		L.v("generating filters");
+		L.INSTANCE$.v("generating filters");
 		filtersDao.callBatchTasks(new Callable<Object>() {
 			@Override
 			public Object call() throws Exception {
@@ -171,14 +171,14 @@ abstract public class DBHelperBase extends OrmLiteSqliteOpenHelper {
 
 	@Override
 	public void onUpgrade(final SQLiteDatabase database, final ConnectionSource connectionSource, final int oldVersion, final int newVersion) {
-		L.v("onUpgrade table");
+		L.INSTANCE$.v("onUpgrade table");
 		try {
 			for (Class cls : classes) {
 				TableUtils.dropTable(connectionSource, cls, true);
 			}
 			TableUtils.dropTable(connectionSource, Filter.class, true);
 		} catch (SQLException e) {
-			L.e("Can't drop table");
+			L.INSTANCE$.e("Can't drop table");
 			e.printStackTrace();
 		}
 

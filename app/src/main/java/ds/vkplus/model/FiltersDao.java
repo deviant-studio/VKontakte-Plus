@@ -5,6 +5,8 @@ import com.j256.ormlite.table.DatabaseTableConfig;
 import ds.vkplus.db.extras.AndroidDao;
 import ds.vkplus.utils.L;
 import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -58,23 +60,35 @@ public class FiltersDao extends AndroidDao<Filter, Integer> {
 			case Filter.MODE_RADIO:
 				parent.unfolded = true;
 				Observable.from(parent.subItems)
-				          .filter(i -> sub != i)
-				          .subscribe(i -> {
-					          L.v("filter=" + i.title);
-					          i.state = UNCHECKED;
-					          try {
-						          update(i);
-					          } catch (SQLException e) {
-						          e.printStackTrace();
+				          .filter(new Func1<Filter, Boolean>() {
+					          @Override
+					          public Boolean call(final Filter i) {return sub != i;}
+				          })
+				          .subscribe(new Action1<Filter>() {
+					          @Override
+					          public void call(final Filter i) {
+						          L.INSTANCE$.v("filter=" + i.title);
+						          i.state = UNCHECKED;
+						          try {
+							          update(i);
+						          } catch (SQLException e) {
+							          e.printStackTrace();
+						          }
 					          }
 				          });
 				break;
 
 			case Filter.MODE_CHECK:
-				if (Observable.from(parent.subItems).all(i -> i.state == CHECKED).toBlocking().last()) {
+				if (Observable.from(parent.subItems).all(new Func1<Filter, Boolean>() {
+					@Override
+					public Boolean call(final Filter i) {return i.state == CHECKED;}
+				}).toBlocking().last()) {
 					parent.state = CHECKED;
 					parent.unfolded = true;
-				} else if (Observable.from(parent.subItems).all(i -> i.state == UNCHECKED).toBlocking().last()) {
+				} else if (Observable.from(parent.subItems).all(new Func1<Filter, Boolean>() {
+					@Override
+					public Boolean call(final Filter i) {return i.state == UNCHECKED;}
+				}).toBlocking().last()) {
 					parent.state = UNCHECKED;
 					parent.unfolded = false;
 				} else {
