@@ -304,6 +304,7 @@ class NewsFragment : BaseFragment() {
 		override fun onCreateViewHolder(parent: ViewGroup, i: Int): Holder {
 			val v = LayoutInflater.from(parent.context).inflate(R.layout.row_post, parent, false)
 			val h = Holder(v, this)
+			//h.card
 			return h
 		}
 		
@@ -368,10 +369,12 @@ class NewsFragment : BaseFragment() {
 					}
 					var imageUrl: String? = null
 					when (a.type) {
-						Attachment.TYPE_PHOTO -> if (a.photo != null) {
-							imageUrl = a.photo.photo_604
-							photos.add(PhotoData(imageUrl, a.photo.width, a.photo.height, PhotoData.TYPE_PHOTO, a.photo.id))
-						}
+						Attachment.TYPE_PHOTO ->
+							if (a.photo != null) {
+								//imageUrl = a.photo.photo_604
+								imageUrl = a.photo.thumb
+								photos.add(PhotoData(imageUrl, a.photo.width, a.photo.height, PhotoData.TYPE_PHOTO, a.photo.id))
+							}
 						
 						Attachment.TYPE_VIDEO -> {
 							imageUrl = Observable.just(a.video.photo_640, a.video.photo_320, a.video.photo_130).toBlocking().first { pic -> pic != null }
@@ -423,23 +426,23 @@ class NewsFragment : BaseFragment() {
 					photos.add(PhotoData(photo.photo_604, photo.width, photo.height, PhotoData.TYPE_PHOTO, photo.id))
 				}
 			
-			if (photos.size() != 0/* && !isScrolling()*/) {
-				h.flowView.visibility = View.VISIBLE
+			if (photos.size() != 0) {
+				h.flowView.toggle(true)
 				val displayMetrics = App.instance.resources.displayMetrics
-				val size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance, 28)
+				val size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance, 40)
 				loadImages(size, h.flowView, h.getViewsCache(), photos, getItemId(p), true)
 			} else
-				h.flowView.visibility = View.GONE
+				h.flowView.toggle(false)
 			
 			// animation
 			val v = h.card
 			if (initTime + 500 < System.currentTimeMillis() && p > previousPostition && isScrolling()) {
-				val speed = v.context.toDips(scrollListener.speed.toFloat()).toInt()
-				Utils.dp(v.context, scrollListener.speed)
+				//val speed = v.context.toDips(scrollListener.speed.toFloat()).toInt()
+				//Utils.dp(v.context, scrollListener.speed)
 				
-				animDuration = (ANIM_DEFAULT_SPEED / (Math.max(speed, 0) / 10f + 1)).toLong()
+				animDuration = ANIM_DEFAULT_SPEED
 				
-				L.v("speed=%s", speed)
+				//L.v("speed=%s", speed)
 				v.translationY = Utils.dp(v.context, 200).toFloat()
 				val a = v.animate().translationY(0f).setDuration(animDuration).setInterpolator(interpolator)
 				
@@ -527,11 +530,12 @@ class NewsFragment : BaseFragment() {
 						}
 						img.displayW = photo.width
 						img.displayH = photo.height
-						val scaleType = ImageView.ScaleType.CENTER_CROP// : ImageView.ScaleType.FIT_CENTER;
+						val scaleType = ImageView.ScaleType.CENTER_CROP
 						img.scaleType = scaleType
 						img.toggleVideoIcon(photo.type == PhotoData.TYPE_VIDEO)
 						//L.v("w=%s h=%s b=%s f=%s", photo.width, photo.height, photo.breakAfter, photo.floating);
-						val lp = FlowLayout.LayoutParams(Utils.dp(App.instance, 2), Utils.dp(App.instance, /*photo.paddingBottom ? 10 : */2))
+						val lp = FlowLayout.LayoutParams(Utils.dp(App.instance, 2), Utils.dp(App.instance, 2))
+						//val lp = FlowLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT)
 						if (photo.breakAfter || photo.floating) {
 							lp.breakAfter = photo.breakAfter
 							lp.floating = photo.floating
@@ -555,7 +559,7 @@ class NewsFragment : BaseFragment() {
 							} else if (photo.type == PhotoData.TYPE_LINK) {
 								L.v("link click")
 								val url = photo.extra
-								if (url.startsWith("http"))
+								if (url != null && url.startsWith("http"))
 									EventBus.post(UrlClickEvent(listOf(url)))
 							}
 						}

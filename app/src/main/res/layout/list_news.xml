@@ -16,6 +16,6 @@
     <TextView
         android:id="@android:id/empty"
         style="@style/empty_list_text"
-        android:visibility="gone"/>
+        />
 
 </FrameLayout>

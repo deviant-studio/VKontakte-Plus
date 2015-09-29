@@ -10,6 +10,7 @@
     android:layout_marginRight="8dp"
     android:layout_marginTop="10dp"
     app:cardCornerRadius="0dp"
+    app:cardUseCompatPadding="true"
     >
 
 
@@ -90,8 +91,6 @@
         <ds.vkplus.ui.view.FlowLayout
             android:id="@+id/flow"
             android:layout_marginTop="10dp"
-            android:layout_marginLeft="-10dp"
-            android:layout_marginRight="-10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 

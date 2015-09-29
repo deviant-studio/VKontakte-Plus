@@ -97,7 +97,7 @@ public class PhotosActivity : AppCompatActivity() {
 		val id = item.itemId
 		if (id == R.id.share) {
 			val data = (viewPager.adapter as PhotosAdapter).getItemAtPos(viewPager.currentItem)
-			Utils.shareText(this, data.extra)
+			Utils.shareText(this, data.extra!!)
 		}
 		return super.onOptionsItemSelected(item)
 	}
