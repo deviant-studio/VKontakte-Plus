@@ -5,6 +5,7 @@ import com.j256.ormlite.misc.BaseDaoEnabled;
 import com.j256.ormlite.table.DatabaseTable;
 import ds.vkplus.db.extras.AndroidDao;
 import rx.Observable;
+import rx.functions.Func1;
 
 
 @DatabaseTable(daoClass = AndroidDao.class)
@@ -71,12 +72,19 @@ public class Photo extends BaseDaoEnabled {
 	public News news;
 
 
+	// todo kotlin
 	public String getBiggestPhoto() {
-		return Observable.just(photo_2560, photo_1280, photo_807, photo_604).toBlocking().first(val -> val != null);
+		return Observable.just(photo_2560, photo_1280, photo_807, photo_604).toBlocking().first(new Func1<String, Boolean>() {
+			@Override
+			public Boolean call(final String val) {return val != null;}
+		});
 	}
 
 
 	public String getThumb() {
-		return Observable.just(photo_604, photo_807, photo_1280, photo_2560).toBlocking().first(val -> val != null);
+		return Observable.just(photo_604, photo_807, photo_1280, photo_2560).toBlocking().first(new Func1<String, Boolean>() {
+			@Override
+			public Boolean call(final String val) {return val != null;}
+		});
 	}
 }

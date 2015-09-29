@@ -105,7 +105,7 @@ public class FiltersDao extends AndroidDao<Filter, Integer> {
 
 
 	public void toggleState(Filter item) throws SQLException {
-		Filter.State s = item.state == CHECKED ? UNCHECKED : CHECKED;
+		final Filter.State s = item.state == CHECKED ? UNCHECKED : CHECKED;
 		if (item.parent != null) {
 			item.state = item.parent.mode == Filter.MODE_RADIO ? CHECKED : s;
 			update(item);
@@ -113,12 +113,15 @@ public class FiltersDao extends AndroidDao<Filter, Integer> {
 		} else {
 			item.state = s;
 			Observable.from(item.subItems)
-			          .subscribe(sub -> {
-				          sub.state = s;
-				          try {
-					          update(sub);
-				          } catch (SQLException e) {
-					          e.printStackTrace();
+			          .subscribe(new Action1<Filter>() {
+				          @Override
+				          public void call(final Filter sub) {
+					          sub.state = s;
+					          try {
+						          update(sub);
+					          } catch (SQLException e) {
+						          e.printStackTrace();
+					          }
 				          }
 			          });
 

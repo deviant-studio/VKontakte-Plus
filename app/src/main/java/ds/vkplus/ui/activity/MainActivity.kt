@@ -1,23 +1,24 @@
 package ds.vkplus.ui.activity
 
+import android.app.SharedElementCallback
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.Window
+import android.view.*
 import ds.vkplus.R
 import ds.vkplus.model.ApiResponse
 import ds.vkplus.network.RestService
 import ds.vkplus.utils.L
+import ds.vkplus.utils.postDelayed
 import rx.functions.Action0
 import rx.functions.Action1
 
 
 public class MainActivity : AppCompatActivity() {
+
+	var newTransitionName: String? = null
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
@@ -44,7 +45,7 @@ public class MainActivity : AppCompatActivity() {
 	
 	
 	private fun showFragment() {
-		supportFragmentManager.beginTransaction().replace(R.id.container, getFragment()).commit()
+		supportFragmentManager.beginTransaction().replace(R.id.container, getFragment(), "news").commit()
 	}
 	
 	
@@ -75,4 +76,12 @@ public class MainActivity : AppCompatActivity() {
 		}
 		return super.onOptionsItemSelected(item)
 	}
+
+	override fun onActivityReenter(requestCode: Int, data: Intent) {
+		super.onActivityReenter(requestCode, data)
+		val id = data.extras.getString("id")
+		newTransitionName = id
+	}
+
+
 }

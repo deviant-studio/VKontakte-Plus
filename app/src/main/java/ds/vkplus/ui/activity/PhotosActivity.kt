@@ -1,15 +1,22 @@
 package ds.vkplus.ui.activity
 
+import android.app.Activity
+import android.app.SharedElementCallback
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.transition.*
+import android.view.*
+import android.widget.ImageView
 import butterknife.Bind
 import butterknife.ButterKnife
 import com.squareup.picasso.Picasso
@@ -20,24 +27,31 @@ import ds.vkplus.db.DBHelper
 import ds.vkplus.model.Attachment
 import ds.vkplus.model.PhotoData
 import ds.vkplus.ui.Croutons
+import ds.vkplus.ui.view.HackyViewPager
 import ds.vkplus.utils.L
 import ds.vkplus.utils.Utils
+import ds.vkplus.utils.postDelayed
 import rx.android.schedulers.AndroidSchedulers
 import rx.lang.kotlin.observable
 import rx.schedulers.Schedulers
 import uk.co.senab.photoview.PhotoView
-
+import uk.co.senab.photoview.PhotoViewAttacher
 import java.io.IOException
-import java.util.ArrayList
+import java.util.*
 
 public class PhotosActivity : AppCompatActivity() {
 	
-	@Bind(R.id.viewpager) lateinit val viewPager: ViewPager
+	@Bind(R.id.viewpager) lateinit val viewPager: HackyViewPager
 	@Bind(R.id.toolbar) lateinit val toolbar: Toolbar
 
+	private var isReturning = false
+
 	override fun onCreate(savedInstanceState: Bundle?) {
+		window.sharedElementEnterTransition = TransitionInflater.from(this).inflateTransition(R.anim.image_transition)
+
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_photos)
+		supportPostponeEnterTransition()
 		ButterKnife.bind(this)
 		setSupportActionBar(toolbar)
 		
@@ -82,8 +96,14 @@ public class PhotosActivity : AppCompatActivity() {
 			}
 			count++
 		}
-		viewPager.adapter = PhotosAdapter(data)
+		val adapter = PhotosAdapter(data)
+		viewPager.adapter = adapter
 		viewPager.setCurrentItem(currIndex, false)
+		/*viewPager.setOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
+			override fun onPageSelected(position: Int) {
+				adapter.sharedElement
+			}
+		})*/
 	}
 	
 	
@@ -101,13 +121,58 @@ public class PhotosActivity : AppCompatActivity() {
 		}
 		return super.onOptionsItemSelected(item)
 	}
+
+
+	override fun finishAfterTransition() {
+		isReturning = true
+		val data = Intent()
+		val item = (viewPager.adapter as PhotosAdapter).getItemAtPos(viewPager.currentItem)
+		data.putExtra("id", item.id.toString())
+		data.putExtra("position", viewPager.currentItem)
+		setResult(Activity.RESULT_OK, data)
+		super.finishAfterTransition()
+	}
 	
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	
-	class PhotosAdapter(private val data: List<PhotoData>) : PagerAdapter() {
+	inner class PhotosAdapter(private val data: List<PhotoData>) : PagerAdapter() {
 		
-		
+		var animPostponed = true
+		var animating = true
+		val attachers = HashMap<View, PhotoViewAttacher>()
+		val postponedViews = HashSet<ImageView>()
+		var sharedElement: View? = null
+
+		init {
+			setupTransitions()
+		}
+
+		private fun setupTransitions() {
+			setEnterSharedElementCallback(object : SharedElementCallback() {
+				override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
+					if (sharedElement != null) {
+						names.clear()
+						sharedElements.clear()
+						names.add(sharedElement!!.transitionName)
+						sharedElements.put(sharedElement!!.transitionName, sharedElement!!)
+					}
+				}
+
+				override fun onSharedElementEnd(sharedElementNames: MutableList<String>, sharedElements: MutableList<View>, sharedElementSnapshots: MutableList<View>) {
+					L.v("onSharedElementEnd")
+					for (v in postponedViews) {
+						attachers.getOrPut(v, provideAttacher(v))
+					}
+					postponedViews.clear()
+					animating = false
+				}
+
+				override fun onSharedElementStart(sharedElementNames: MutableList<String>, sharedElements: MutableList<View>, sharedElementSnapshots: MutableList<View>) {
+				}
+			})
+		}
+
 		override fun getCount(): Int {
 			return data.size()
 		}
@@ -119,14 +184,14 @@ public class PhotosActivity : AppCompatActivity() {
 		
 		
 		override fun instantiateItem(container: ViewGroup, position: Int): View {
-			val photoView = PhotoView(container.context)
-			val url = data.get(position).url
-			val big = data.get(position).extra
-			
+			val imageView = ImageView(container.context)
+			val item = data[position]
+			imageView.transitionName = item.id.toString()
+
 			observable<Bitmap> {
 				try {
-					it.onNext(Picasso.with(container.context).load(url).get())
-					it.onNext(Picasso.with(container.context).load(big).get())
+					it.onNext(Picasso.with(container.context).load(item.url).get())
+					it.onNext(Picasso.with(container.context).load(item.extra).get())
 				} catch (e: IOException) {
 					e.printStackTrace()
 					it.onError(e)
@@ -134,16 +199,49 @@ public class PhotosActivity : AppCompatActivity() {
 			}
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe({ photoView.setImageBitmap(it) })
+				.subscribe({
+					imageView.setImageBitmap(it)
+
+					if (animating) {
+						postponedViews.add(imageView)
+					} else
+						attachers.getOrPut(imageView, provideAttacher(imageView)).update()
+
+					if (animPostponed) {
+						animPostponed = false
+						this@PhotosActivity.supportStartPostponedEnterTransition()
+					}
+				})
 			
 			
-			container.addView(photoView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-			return photoView
+			container.addView(imageView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+			return imageView
+		}
+
+		private fun provideAttacher(view: ImageView): () -> PhotoViewAttacher {
+			return {
+				val a = PhotoViewAttacher(view)
+				a.onPhotoTapListener = PhotoViewAttacher.OnPhotoTapListener { view, f1, f2 ->
+					sharedElement = view
+					supportFinishAfterTransition()
+				}
+				a
+			}
 		}
 		
 		
-		override fun destroyItem(container: ViewGroup, position: Int, obj: Any) = container.removeView(obj as View)
+		override fun destroyItem(container: ViewGroup, position: Int, obj: Any) {
+			val view = obj as View
+			container.removeView(view)
+			attachers.remove(view)?.cleanup()
+		}
 		
 		override fun isViewFromObject(view: View, obj: Any): Boolean = view == obj
+
+		override fun setPrimaryItem(container: ViewGroup?, position: Int, o: Any?) {
+			super.setPrimaryItem(container, position, o)
+			sharedElement = o as ImageView
+		}
 	}
+
 }

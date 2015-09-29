@@ -2,11 +2,15 @@ package ds.vkplus.ui.activity
 
 
 import android.animation.LayoutTransition
+import android.app.Activity
+import android.app.ActivityOptions
+import android.app.SharedElementCallback
 import android.content.Context
 import android.content.Intent
 import android.graphics.Point
 import android.net.Uri
 import android.os.Bundle
+import android.support.v4.app.ActivityOptionsCompat
 import android.support.v4.view.MenuItemCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -81,20 +85,35 @@ class NewsFragment : BaseFragment() {
 		
 		loadNews()
 		
-		//runCountChecker();
-		
-		/*if (b != null)
-			lastPosition = b.getInt("position");*/
-		
 		val ab = (activity as AppCompatActivity).supportActionBar
 		ab.setDisplayShowTitleEnabled(true)
 		ab.setTitle(R.string.news)
-		//ab.setDisplayUseLogoEnabled(true);
-		
+
+		setupTransitions()
+
 		super.onViewCreated(view, b)
 	}
-	
-	
+
+	private fun setupTransitions() {
+		activity.setExitSharedElementCallback(object : SharedElementCallback() {
+			override fun onMapSharedElements(names: MutableList<String>?, sharedElements: MutableMap<String, View>?) {
+				with (activity as MainActivity) {
+					if (newTransitionName != null) {
+						val newSharedView = recyclerView.findViewWithTag(newTransitionName)
+						if (newSharedView != null) {
+							L.v("found $newTransitionName")
+							names?.clear()
+							names?.add(newTransitionName!!)
+							sharedElements?.clear()
+							sharedElements?.put(newTransitionName!!, newSharedView)
+						}
+						newTransitionName = null
+					}
+				}
+			}
+		})
+	}
+
 	override fun onDestroy() {
 		super.onDestroy()
 		
@@ -439,8 +458,8 @@ class NewsFragment : BaseFragment() {
 			if (initTime + 500 < System.currentTimeMillis() && p > previousPostition && isScrolling()) {
 				animDuration = ANIM_DEFAULT_SPEED
 				v.translationY = Utils.dp(v.context, 200).toFloat()
-				v.scaleX=0.9f
-				v.scaleY=0.9f
+				v.scaleX = 0.9f
+				v.scaleY = 0.9f
 				val a = v
 					.animate()
 					.translationY(0f)
@@ -541,6 +560,9 @@ class NewsFragment : BaseFragment() {
 						}
 						
 						img.layoutParams = lp
+						img.transitionName = photo.id.toString()
+						img.tag = photo.id.toString()
+
 						flow.addView(img)
 						if (loadPhotos)
 							Picasso.with(flow.context).load(photo.url).placeholder(img.placeholder).into(img)
@@ -549,10 +571,11 @@ class NewsFragment : BaseFragment() {
 						
 						img.setOnClickListener { v ->
 							if (photo.type == PhotoData.TYPE_PHOTO) {
+								val o = ActivityOptionsCompat.makeSceneTransitionAnimation(v.context as Activity?, v, v.transitionName).toBundle()
 								val i = Intent(v.context, PhotosActivity::class.java)
 								i.putExtra(Constants.KEY_POST_ID, itemId)
 								i.putExtra(Constants.KEY_PHOTO_ID, photo.id)
-								v.context.startActivity(i)
+								v.context.startActivity(i, o)
 							} else if (photo.type == PhotoData.TYPE_VIDEO) {
 								openVideo(v.context, photo.id)
 							} else if (photo.type == PhotoData.TYPE_LINK) {
