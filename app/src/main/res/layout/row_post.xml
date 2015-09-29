@@ -9,12 +9,13 @@
     android:layout_marginLeft="8dp"
     android:layout_marginRight="8dp"
     android:layout_marginTop="10dp"
-    app:cardCornerRadius="0dp"
+    app:cardCornerRadius="1dp"
     app:cardUseCompatPadding="true"
     >
 
 
     <LinearLayout
+        android:id="@+id/animated_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:animateLayoutChanges="true"

@@ -1,6 +1,7 @@
 package ds.vkplus.ui.activity
 
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.content.Intent
 import android.graphics.Point
@@ -106,10 +107,15 @@ class NewsFragment : BaseFragment() {
 		recyclerView.setHasFixedSize(true)
 		mLayoutManager = LinearLayoutManager(activity)
 		recyclerView.layoutManager = mLayoutManager
+		//val listAnimator= LandingAnimator()
+		recyclerView.itemAnimator = null
 		val scrollListener = OnScrollBottomRecyclerViewListener(mLayoutManager as LinearLayoutManager) { lastPos -> loadMoreNews(getOldestNext()) }
 		recyclerView.setOnScrollListener(scrollListener)
 		if (adapter == null) {
 			adapter = NewsRecyclerAdapter(ArrayList<News>(), scrollListener, recyclerView)
+			//val animatedAdapter=SlideInBottomAnimationAdapter(adapter)
+			//animatedAdapter.setDuration(1000)
+			//animatedAdapter.setInterpolator(DecelerateInterpolator())
 			recyclerView.adapter = adapter
 		} else
 			adapter!!.setItems(ArrayList<News>())
@@ -263,7 +269,6 @@ class NewsFragment : BaseFragment() {
 		private val recycler: RecyclerView
 	) : RecyclerView.Adapter<NewsRecyclerAdapter.Holder>() {
 		
-		private val displaySize: Point
 		private val picasso: Picasso
 		private var initTime: Long = 0
 		var previousPostition: Int = 0
@@ -284,10 +289,6 @@ class NewsFragment : BaseFragment() {
 			resetInitTime()
 			previousPostition = -1
 			interpolator = DecelerateInterpolator()
-			val wm = App.instance.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-			displaySize = Point()
-			wm.defaultDisplay.getSize(displaySize)
-			//
 		}
 		
 		
@@ -304,7 +305,6 @@ class NewsFragment : BaseFragment() {
 		override fun onCreateViewHolder(parent: ViewGroup, i: Int): Holder {
 			val v = LayoutInflater.from(parent.context).inflate(R.layout.row_post, parent, false)
 			val h = Holder(v, this)
-			//h.card
 			return h
 		}
 		
@@ -437,20 +437,19 @@ class NewsFragment : BaseFragment() {
 			// animation
 			val v = h.card
 			if (initTime + 500 < System.currentTimeMillis() && p > previousPostition && isScrolling()) {
-				//val speed = v.context.toDips(scrollListener.speed.toFloat()).toInt()
-				//Utils.dp(v.context, scrollListener.speed)
-				
 				animDuration = ANIM_DEFAULT_SPEED
-				
-				//L.v("speed=%s", speed)
 				v.translationY = Utils.dp(v.context, 200).toFloat()
-				val a = v.animate().translationY(0f).setDuration(animDuration).setInterpolator(interpolator)
-				
+				v.scaleX=0.9f
+				v.scaleY=0.9f
+				val a = v
+					.animate()
+					.translationY(0f)
+					.scaleX(1f)
+					.scaleY(1f)
+					.setDuration(animDuration)
+					.setInterpolator(interpolator)
 				a.start()
-			} else {
-				//v.setTranslationY(0);   // return to default
 			}
-			
 			previousPostition = p
 			
 		}
@@ -606,6 +605,7 @@ class NewsFragment : BaseFragment() {
 			@Bind(R.id.header) lateinit val header: ViewGroup                   // +
 			@Bind(R.id.repost_header) lateinit val repostHeader: ViewGroup      // +
 			@Bind(R.id.card) lateinit val card: ViewGroup                       // +
+			@Bind(R.id.animated_layout) lateinit val animatedLayout: ViewGroup
 
 
 			private var cache: MutableList<View>? = null
@@ -624,6 +624,12 @@ class NewsFragment : BaseFragment() {
 				reposts.setOnClickListener { onClick(it) }
 				linkContainer.setOnClickListener { onLinkClick(it) }
 				titleView.setOnClickListener { title -> L.v("data size=%s pos=%s", adapter.data!!.size(), position) }
+
+				/*val lt=LayoutTransition()
+				lt.enableTransitionType(LayoutTransition.CHANGING)
+				lt.disableTransitionType(LayoutTransition.CHANGE_APPEARING)
+				lt.disableTransitionType(LayoutTransition.APPEARING)
+				animatedLayout.layoutTransition=lt*/
 
 				overflow.setOnClickListener { view ->
 					val popup = ListPopupWindow(view.context)
