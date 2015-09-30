@@ -213,9 +213,10 @@ public class PhotosActivity : AppCompatActivity() {
 						if (it.first == 1) {
 							L.v("url 1-$position")
 							imageView.setImageBitmap(it.second)
+							postponedViews.put(imageView, it.second)    // test this!
 						} else {
 							L.v("url 2-$position")
-							postponedViews.put(imageView, it.second)  // postpone image setup until transition finish
+							postponedViews.put(imageView, it.second)
 						}
 					} else {
 						L.v("after animating.")
