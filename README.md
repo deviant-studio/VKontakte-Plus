@@ -1,7 +1,7 @@
 # VKontakte-Plus
 VK client with 'filtering by likes' feature
 
-![](/VKontakte-Plus/blob/master/art/screen1.jpg?raw=true)
+<img src="https://github.com/deviant-studio/VKontakte-Plus/blob/master/art/screen1.jpg" width="50%"/>
 
 
 Nice animations implemented with Lollipop shared elements transitions
