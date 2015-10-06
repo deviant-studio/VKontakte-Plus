@@ -1,10 +1,13 @@
 package ds.vkplus.ui.activity
 
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.app.SharedElementCallback
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -336,12 +339,7 @@ class NewsFragment : BaseFragment() {
 			return h
 		}
 		
-		var tracingCounter = 0
 		override fun onBindViewHolder(h: Holder, p: Int) {
-
-			//if (tracingCounter == 0)
-			//Debug.startMethodTracing("trace-file")
-			//tracingCounter++
 
 			val item = data!!.get(p)
 			//L.v("attachments " + (item.attachments != null ? item.attachments.size() : -1));
@@ -352,7 +350,7 @@ class NewsFragment : BaseFragment() {
 			h.reposts.text = item.repostsCount.toString()
 			if (item.producer != null) {
 				h.titleView.text = item.producer.name
-				loadRoundImage(item.producer.thumb,h.avatarView)
+				loadRoundImage(item.producer.thumb, h.avatarView)
 			}
 			
 			
@@ -374,7 +372,7 @@ class NewsFragment : BaseFragment() {
 				val repost = item.copy_history.iterator().next()
 				h.repostTitle.text = repost.producer.name
 				h.repostDate.text = DateUtils.getRelativeTimeSpanString(repost.date * 1000)
-				loadRoundImage(repost.producer.thumb,h.repostAvatar)
+				loadRoundImage(repost.producer.thumb, h.repostAvatar)
 				item.text = repost.text
 				item.attachments = repost.attachments
 			} else {
@@ -395,7 +393,7 @@ class NewsFragment : BaseFragment() {
 			
 			if (item.attachments != null) {
 				for (a in item.attachments) {
-					L.v("attahcment type=" + a.type)
+					//L.v("attahcment type=" + a.type)
 					if (a.getContent<BaseDaoEnabled<*, *>>() == null) {
 						L.e("attachment content is null!")
 					}
@@ -446,10 +444,7 @@ class NewsFragment : BaseFragment() {
 							
 						}
 					}
-					
-					
 				}
-				
 			}
 			
 			if (item.photosPersist != null)
@@ -467,12 +462,12 @@ class NewsFragment : BaseFragment() {
 			
 			// animation
 			val v = h.card
-			if (initTime + 500 < System.currentTimeMillis() && p > previousPostition && isScrolling()) {
+			if (/*initTime + 500 < System.currentTimeMillis() &&*/ p > previousPostition && isScrolling()) {
+				//L.v("==> anim:${h.position} tY=${v.translationY} top=${v.top}")
 				animDuration = ANIM_DEFAULT_SPEED
 				v.translationY = Utils.dp(v.context, 200).toFloat()
 				v.scaleX = 0.9f
 				v.scaleY = 0.9f
-				v.clearAnimation()
 				val a = v
 					.animate()
 					.translationY(0f)
@@ -484,14 +479,12 @@ class NewsFragment : BaseFragment() {
 			}
 			previousPostition = p
 
-			//if (tracingCounter == 20) {
-			//Debug.stopMethodTracing()
-			//	T.show(v.context, "tracing stopped")
-			//}
 		}
 		
 		
-		private fun isScrolling(): Boolean = recycler.scrollState == RecyclerView.SCROLL_STATE_SETTLING || recycler.scrollState == RecyclerView.SCROLL_STATE_DRAGGING
+		private fun isScrolling(): Boolean =
+			recycler.scrollState == RecyclerView.SCROLL_STATE_SETTLING
+				|| recycler.scrollState == RecyclerView.SCROLL_STATE_DRAGGING
 		
 		
 		override fun getItemCount(): Int = data?.size() ?: 0
@@ -579,7 +572,7 @@ class NewsFragment : BaseFragment() {
 
 						flow.addView(img)
 						if (loadPhotos)
-							loadImage(photo.url,img)
+							loadImage(photo.url, img)
 						else
 							img.setImageDrawable(img.placeholder)
 						
@@ -630,18 +623,18 @@ class NewsFragment : BaseFragment() {
 			@Bind(R.id.text) lateinit var textView: TextView
 			@Bind(R.id.likes) lateinit var likesView: CheckedTextView
 			@Bind(R.id.title) lateinit var titleView: TextView
-			@Bind(R.id.repost_avatar) lateinit var repostAvatar: ImageView      // +
-			@Bind(R.id.repost_title) lateinit var repostTitle: TextView         // +
-			@Bind(R.id.repost_date) lateinit var repostDate: TextView           // +
-			@Bind(R.id.comments) lateinit var comments: CheckedTextView         // +
-			@Bind(R.id.reposts) lateinit var reposts: CheckedTextView           // +
-			@Bind(R.id.signer) lateinit var signer: TextView                    // +
-			@Bind(R.id.expand) lateinit var expand: TextView                    // +
-			@Bind(R.id.link) lateinit var linkContainer: ViewGroup              // +
-			@Bind(R.id.overflow) lateinit var overflow: ImageView               // +
-			@Bind(R.id.header) lateinit var header: ViewGroup                   // +
-			@Bind(R.id.repost_header) lateinit var repostHeader: ViewGroup      // +
-			@Bind(R.id.card) lateinit var card: ViewGroup                       // +
+			@Bind(R.id.repost_avatar) lateinit var repostAvatar: ImageView
+			@Bind(R.id.repost_title) lateinit var repostTitle: TextView
+			@Bind(R.id.repost_date) lateinit var repostDate: TextView
+			@Bind(R.id.comments) lateinit var comments: CheckedTextView
+			@Bind(R.id.reposts) lateinit var reposts: CheckedTextView
+			@Bind(R.id.signer) lateinit var signer: TextView
+			@Bind(R.id.expand) lateinit var expand: TextView
+			@Bind(R.id.link) lateinit var linkContainer: ViewGroup
+			@Bind(R.id.overflow) lateinit var overflow: ImageView
+			@Bind(R.id.header) lateinit var header: ViewGroup
+			@Bind(R.id.repost_header) lateinit var repostHeader: ViewGroup
+			@Bind(R.id.card) lateinit var card: ViewGroup
 			@Bind(R.id.animated_layout) lateinit var animatedLayout: ViewGroup
 
 			val context by lazy { v.context }

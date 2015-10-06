@@ -37,7 +37,7 @@ class FlowLayout(context: Context, attributeSet: AttributeSet) : ViewGroup(conte
 		val w = r - l
 		var pl = paddingLeft
 		var pt = paddingTop
-		L.v("pl=%s pt=%s", pl, pt)
+		//L.v("pl=%s pt=%s", pl, pt)
 		var index = 0
 		var breakAfter = false
 		var bl3 = false

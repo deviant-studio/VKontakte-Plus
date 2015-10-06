@@ -90,7 +90,7 @@ public class MainActivity : RxAppCompatActivity() {
 					L.v("completed")
 				})
 			
-			R.id.debug_layout -> startActivity(Intent(this, TempActivity::class.java))
+			//R.id.debug_layout -> startActivity(Intent(this, TempActivity::class.java))
 		}
 		return super.onOptionsItemSelected(item)
 	}

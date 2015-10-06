@@ -40,7 +40,8 @@ object Utils {
 	fun toggleView(v: View, visible: Boolean) {
 		v.visibility = if (visible) View.VISIBLE else View.GONE
 	}
-	
+
+	@Deprecated("doesnt work anymore")
 	fun isAppForeground(): Boolean {
 		val context = App.instance
 		val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager

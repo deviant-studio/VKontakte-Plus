@@ -25,7 +25,7 @@ public class OnScrollBottomRecyclerViewListener(private val lm: LinearLayoutMana
 
 	override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
 		//scrollState = newState;
-		L.v("state=" + newState)
+		//L.v("state=" + newState)
 		if (newState == RecyclerView.SCROLL_STATE_IDLE) {
 
 			if (total < 3) {
