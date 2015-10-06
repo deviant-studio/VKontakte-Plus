@@ -1,0 +1,3 @@
+include ':app'
+//include ':vk_sdk'
+//project(":vk_sdk").projectDir = new File("c:/dev/git/vk-android-sdk/vksdk_library")

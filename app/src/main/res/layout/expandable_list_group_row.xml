@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/groupname"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:descendantFocusability="blocksDescendants"
+    android:layout_width="fill_parent"
+    android:background="@drawable/card_selector"
+    android:layout_height="wrap_content">
+
+    <ds.vkplus.ui.view.ThreeStateButton
+        android:id="@+id/threeStateCheck"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/threestate_checked"/>
+
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:textColor="@color/dark"
+        android:layout_gravity="center_vertical"
+        android:gravity="center_vertical"
+        android:text="List Header"
+        android:focusable="true"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        >
+    </TextView>
+</LinearLayout>

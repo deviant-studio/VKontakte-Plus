@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+    android:id="@+id/link"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_selector"
+    android:layout_marginTop="10dp"
+    >
+
+    <View
+        android:id="@+id/link_divider"
+        android:layout_width="2dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/link_secondary"
+        android:layout_marginRight="10dp"
+        android:background="@color/app_color"
+
+        android:layout_alignTop="@+id/link_primary" />
+
+    <TextView
+        android:id="@+id/link_primary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/link_divider"
+        android:textSize="15sp"
+        android:text="Link Title"
+        android:textColor="@color/dark" />
+
+    <TextView
+        android:id="@+id/link_secondary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:layout_alignLeft="@+id/link_primary"
+        android:layout_below="@+id/link_primary"
+        android:text="http://blablabla.com/some_url"
+        android:textColor="@color/gray1" />
+
+
+</RelativeLayout>

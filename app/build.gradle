@@ -1,0 +1,166 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.zeroturnaround.jrebel.android'
+apply plugin: 'io.fabric'
+//apply plugin: 'com.jakewharton.hugo'
+apply plugin: 'kotlin-android'
+//apply plugin: 'com.neenbedankt.android-apt'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '23'
+
+    defaultConfig {
+        applicationId "ds.vkplus"
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode 3
+        versionName "0.2"
+    }
+
+    signingConfigs {
+        release {
+            def props = project.properties
+            storeFile = file('../../' + props.storeFile)
+            keyAlias props.keyAlias
+            keyPassword props.keyPassword
+            storePassword props.storePassword
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+
+
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+
+    dexOptions {
+        //incremental true
+        //preDexLibraries = true
+        //jumboMode = false
+
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File("c:/dev/java/vk_plus/app/build",
+                    "vkplus${defaultConfig.versionName}-${variant.buildType.name}.apk")
+        }
+    }
+
+    lintOptions {
+
+        // set to true to turn off analysis progress reporting by lint
+        quiet true
+        // if true, stop the gradle build if errors are found
+        abortOnError false
+        // if true, only report errors
+        ignoreWarnings true
+        // if true, emit full/absolute paths to files with errors (true by default)
+        //absolutePaths true
+        // if true, check all issues, including those that are off by default
+        checkAllWarnings false
+        // if true, treat all warnings as errors
+        //warningsAsErrors true
+        // turn off checking the given issue id's
+        //disable 'TypographyFractions','TypographyQuotes'
+        // turn on the given issue id's
+        //enable 'RtlHardcoded','RtlCompat', 'RtlEnabled'
+        // check *only* the given issue id's
+        //check 'NewApi', 'InlinedApi'
+        // if true, don't include source code lines in the error output
+        //noLines true
+        // if true, show all locations for an error, do not truncate lists, etc.
+        //showAll true
+        // Fallback lint configuration (default severities, etc.)
+        //lintConfig file("default-lint.xml")
+        // if true, generate a text report of issues (false by default)
+        //textReport true
+        // location to write the output; can be a file or 'stdout'
+        //textOutput 'stdout'
+        // if true, generate an XML report for use by for example Jenkins
+        //xmlReport false
+        // file to write report to (if not specified, defaults to lint-results.xml)
+        //xmlOutput file("lint-report.xml")
+        // if true, generate an HTML report (with issue explanations, sourcecode, etc)
+        //htmlReport true
+        // optional path to report (default will be lint-results.html in the builddir)
+        //htmlOutput file("lint-report.html")
+
+        // set to true to have all release builds run lint on issues with severity=fatal
+
+        // and abort the build (controlled by abortOnError above) if fatal issues are found
+
+        //checkReleaseBuilds true
+
+        // Set the severity of the given issues to fatal (which means they will be
+        // checked during release builds (even if the lint target is not included)
+        //fatal 'NewApi', 'InlineApi'
+        // Set the severity of the given issues to error
+        //error 'Wakelock', 'TextViewEdits'
+        // Set the severity of the given issues to warning
+        //warning 'ResourceAsColor'
+        // Set the severity of the given issues to ignore (same as disabling the check)
+        ignore 'GradleDynamicVersion'
+    }
+}
+
+kapt {
+    generateStubs = false
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'io.reactivex:rxjava:1.0.14'
+    compile 'io.reactivex:rxandroid:1.0.1'
+    compile 'io.reactivex:rxkotlin:0.22.13'
+    compile 'com.trello:rxlifecycle:0.3.0'
+    compile('com.trello:rxlifecycle-components:0.3.0') {
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+    }
+    compile 'com.jakewharton.rxbinding:rxbinding:0.2.0'
+    compile 'com.squareup.retrofit:retrofit:1.9.+'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    //compile 'com.github.bumptech.glide:glide:3.6.1'
+    compile 'com.squareup:otto:1.3.8'
+    //compile 'com.googlecode.android-query:android-query:0.25.9'
+    compile 'com.jakewharton:butterknife:7.0.1'
+    kapt 'com.jakewharton:butterknife:7.0.1'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.5.0'
+    compile 'com.android.support:appcompat-v7:23.+'
+    compile 'com.android.support:cardview-v7:23.+'
+    compile 'com.android.support:recyclerview-v7:23.+'
+    compile 'com.j256.ormlite:ormlite-android:4.48'
+    compile 'de.keyboardsurfer.android.widget:crouton:1.8.5@aar'
+    compile('com.commit451:PhotoView:1.2.4') {
+        exclude group: 'com.android.support', module: 'support-v4'
+    }
+    //compile 'jp.wasabeef:recyclerview-animators:1.3.0'
+    //compile 'com.f2prateek.dart:dart:2.0.0-RC1'
+    //apt 'com.f2prateek.dart:dart-processor:2.0.0-RC1'
+    //compile 'com.f2prateek.dart:henson:2.0.0-RC2-SNAPSHOT'
+    //apt 'com.f2prateek.dart:henson-processor:2.0.0-RC2-SNAPSHOT'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    compile 'com.facebook.stetho:stetho:+'
+
+    compile 'com.squareup.leakcanary:leakcanary-android:1.3.1'
+    //releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.3.1'
+
+    compile('com.crashlytics.sdk.android:crashlytics:2.5.2@aar') {
+        transitive = true;
+    }
+}

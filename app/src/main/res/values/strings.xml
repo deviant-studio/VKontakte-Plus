@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <array name="overflow_items">
+        <item>Share</item>
+        <item>Copy to Clipboard</item>
+        <item>Debug</item>
+    </array>
+
+    <array name="comment_popup_items">
+        <item>Like</item>
+        <item>Reply</item>
+        <item>Share</item>
+        <!-- <item>Like</item> -->
+    </array>
+
+    <string name="app_name">VK+</string>
+    <string name="action_settings">Settings</string>
+    <string name="account_type">ds.vkplus</string>
+    <string name="no_items">No Items</string>
+    <string name="comments">Comments</string>
+    <string name="news">News</string>
+    <string name="page">Page</string>
+    <string name="more_">More…</string>
+    <string name="refresh">Refresh</string>
+    <string name="title_activity_photos">Photos</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="fail">Fail!</string>
+    <string name="filter">Filter</string>
+    <string name="title_activity_temp">TempActivity</string>
+
+</resources>

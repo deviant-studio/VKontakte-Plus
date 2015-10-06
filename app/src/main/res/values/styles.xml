@@ -1,0 +1,50 @@
+<resources>
+
+
+
+    <style name="news_bottom_icon_text">
+        <item name="android:drawableLeft">@drawable/checked_like</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:layout_marginLeft">20dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/checked_text</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:background">@drawable/card_selector</item>
+    </style>
+
+    <style name="empty_list_text">
+        <item name="android:id">@android:id/empty</item>
+        <item name="android:text">@string/no_items</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:textColor">@color/gray1</item>
+    </style>
+
+    <style name="image_button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">4dp</item>
+        <item name="android:background">@drawable/card_selector</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <style name="date_text">
+        <item name="android:textSize">14sp</item>
+        <!--<item name="android:fontFamily">sans-serif-light</item>-->
+        <item name="android:textColor">@color/gray1</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_below">@+id/title</item>
+        <item name="android:layout_alignLeft">@+id/title</item>
+    </style>
+
+    <style name="crouton_appearance">
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+
+</resources>
