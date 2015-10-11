@@ -1,13 +1,10 @@
 package ds.vkplus.ui.activity
 
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.app.SharedElementCallback
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -23,8 +20,6 @@ import android.view.*
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.Interpolator
 import android.widget.*
-import butterknife.Bind
-import butterknife.ButterKnife
 import com.j256.ormlite.misc.BaseDaoEnabled
 import com.squareup.otto.Subscribe
 import ds.vkplus.App
@@ -40,13 +35,14 @@ import ds.vkplus.eventbus.events.UrlClickEvent
 import ds.vkplus.model.*
 import ds.vkplus.model.Filter
 import ds.vkplus.network.RestService
-import ds.vkplus.ui.CircleTransform
-import ds.vkplus.ui.Croutons
 import ds.vkplus.ui.OnScrollBottomRecyclerViewListener
+import ds.vkplus.ui.CroutonStyles
+import ds.vkplus.ui.crouton
 import ds.vkplus.ui.view.FixedSizeImageView
 import ds.vkplus.ui.view.FlowLayout
 import ds.vkplus.ui.view.LayoutUtils
 import ds.vkplus.utils.*
+import kotterknife.bindView
 import rx.Observable
 import rx.Subscriber
 import rx.lang.kotlin.observable
@@ -54,8 +50,8 @@ import java.util.*
 
 class NewsFragment : BaseFragment() {
 	
-	@Bind(R.id.list) lateinit var recyclerView: RecyclerView
-	@Bind(android.R.id.empty) lateinit var emptyView: TextView
+	val recyclerView: RecyclerView by bindView(R.id.list)
+	val emptyView: TextView by bindView(android.R.id.empty)
 	
 	private var adapter: NewsRecyclerAdapter? = null
 	private var mLayoutManager: RecyclerView.LayoutManager? = null
@@ -72,7 +68,6 @@ class NewsFragment : BaseFragment() {
 
 
 	override fun onViewCreated(view: View?, b: Bundle?) {
-		ButterKnife.bind(this, view)
 		setHasOptionsMenu(true)
 		
 		//view.setNestedScrollingEnabled(true);
@@ -177,8 +172,9 @@ class NewsFragment : BaseFragment() {
 			initList()
 			
 		} //else
-		
-		loadNews()
+
+		onRefresh()
+		//loadNews()
 	}
 	
 	
@@ -196,7 +192,7 @@ class NewsFragment : BaseFragment() {
 				}
 			}
 				.compose(rest.applySchedulers())
-				.subscribe({ loadNews() }) { Croutons.prepare().message("Failed to drop database").show(activity) }
+				.subscribe({ loadNews() }) { activity.crouton("Failed to drop database", CroutonStyles.ERROR) }
 		} else {
 			loadNews()
 		}
@@ -240,7 +236,7 @@ class NewsFragment : BaseFragment() {
 		}, {
 			L.e("error catched in fragment")
 			it.printStackTrace()
-			Croutons.prepare().message("Loading Error").show(activity)
+			activity.crouton("Loading Error", CroutonStyles.ERROR)
 			toggleProgress(false)
 
 		})
@@ -615,34 +611,33 @@ class NewsFragment : BaseFragment() {
 
 		class Holder(private val v: View, private val adapter: NewsRecyclerAdapter) : RecyclerView.ViewHolder(v) {
 
-			@Bind(R.id.date) lateinit var dateView: TextView
-			@Bind(R.id.flow) lateinit var flowView: ViewGroup
-			@Bind(R.id.avatar) lateinit var avatarView: ImageView
-			@Bind(R.id.link_primary) lateinit var linkPrimaryView: TextView
-			@Bind(R.id.link_secondary) lateinit var linkSecondaryView: TextView
-			@Bind(R.id.text) lateinit var textView: TextView
-			@Bind(R.id.likes) lateinit var likesView: CheckedTextView
-			@Bind(R.id.title) lateinit var titleView: TextView
-			@Bind(R.id.repost_avatar) lateinit var repostAvatar: ImageView
-			@Bind(R.id.repost_title) lateinit var repostTitle: TextView
-			@Bind(R.id.repost_date) lateinit var repostDate: TextView
-			@Bind(R.id.comments) lateinit var comments: CheckedTextView
-			@Bind(R.id.reposts) lateinit var reposts: CheckedTextView
-			@Bind(R.id.signer) lateinit var signer: TextView
-			@Bind(R.id.expand) lateinit var expand: TextView
-			@Bind(R.id.link) lateinit var linkContainer: ViewGroup
-			@Bind(R.id.overflow) lateinit var overflow: ImageView
-			@Bind(R.id.header) lateinit var header: ViewGroup
-			@Bind(R.id.repost_header) lateinit var repostHeader: ViewGroup
-			@Bind(R.id.card) lateinit var card: ViewGroup
-			@Bind(R.id.animated_layout) lateinit var animatedLayout: ViewGroup
+			val dateView: TextView by bindView(R.id.date)
+			val flowView: ViewGroup by bindView(R.id.flow)
+			val avatarView: ImageView by bindView(R.id.avatar)
+			val linkPrimaryView: TextView by bindView(R.id.link_primary)
+			val linkSecondaryView: TextView by bindView(R.id.link_secondary)
+			val textView: TextView by bindView(R.id.text)
+			val likesView: CheckedTextView by bindView(R.id.likes)
+			val titleView: TextView by bindView(R.id.title)
+			val repostAvatar: ImageView by bindView(R.id.repost_avatar)
+			val repostTitle: TextView by bindView(R.id.repost_title)
+			val repostDate: TextView by bindView(R.id.repost_date)
+			val comments: CheckedTextView by bindView(R.id.comments)
+			val reposts: CheckedTextView by bindView(R.id.reposts)
+			val signer: TextView by bindView(R.id.signer)
+			val expand: TextView by bindView(R.id.expand)
+			val linkContainer: ViewGroup by bindView(R.id.link)
+			val overflow: ImageView by bindView(R.id.overflow)
+			val header: ViewGroup by bindView(R.id.header)
+			val repostHeader: ViewGroup by bindView(R.id.repost_header)
+			val card: ViewGroup by bindView(R.id.card)
+			val animatedLayout: ViewGroup by bindView(R.id.animated_layout)
 
 			val context by lazy { v.context }
 			private var cache: MutableList<View>? = null
 
 
 			init {
-				ButterKnife.bind(this, v)
 				initViews()
 			}
 

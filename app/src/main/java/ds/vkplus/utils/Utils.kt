@@ -10,6 +10,9 @@ import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.support.v4.app.Fragment
+import android.support.v7.app.ActionBar
+import android.support.v7.app.AppCompatActivity
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.util.TypedValue
@@ -157,3 +160,6 @@ fun loadImageBlocking(url: String) =
 fun loadImage(url: String, img: FixedSizeImageView) = picasso.load(url).placeholder(img.placeholder).config(Bitmap.Config.RGB_565).into(img)
 fun loadRoundImage(url: String, img: ImageView) = picasso.load(url).transform(CircleTransform.instance).into(img)
 fun loadImageBlocking(url: String) = picasso.load(url).config(Bitmap.Config.RGB_565).get()
+
+val Fragment.actionBar: ActionBar
+	get() = (this.activity as AppCompatActivity).supportActionBar

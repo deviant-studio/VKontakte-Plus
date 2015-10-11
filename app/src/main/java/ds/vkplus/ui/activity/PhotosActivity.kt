@@ -14,19 +14,19 @@ import android.transition.Transition
 import android.transition.TransitionInflater
 import android.view.*
 import android.widget.ImageView
-import butterknife.Bind
-import butterknife.ButterKnife
 import de.keyboardsurfer.android.widget.crouton.LifecycleCallback
 import ds.vkplus.Constants
 import ds.vkplus.R
 import ds.vkplus.db.DBHelper
 import ds.vkplus.model.Attachment
 import ds.vkplus.model.PhotoData
-import ds.vkplus.ui.Croutons
+import ds.vkplus.ui.crouton
 import ds.vkplus.ui.view.HackyViewPager
 import ds.vkplus.utils.L
 import ds.vkplus.utils.Utils
 import ds.vkplus.utils.loadImageBlocking
+import ds.vkplus.utils.postDelayed
+import kotterknife.bindView
 import rx.android.schedulers.AndroidSchedulers
 import rx.lang.kotlin.observable
 import rx.schedulers.Schedulers
@@ -35,8 +35,8 @@ import java.io.IOException
 import java.util.*
 
 public class PhotosActivity : AppCompatActivity() {
-	@Bind(R.id.viewpager) lateinit var viewPager: HackyViewPager
-	@Bind(R.id.toolbar) lateinit var toolbar: Toolbar
+	val viewPager: HackyViewPager by bindView(R.id.viewpager)
+	val toolbar: Toolbar by bindView(R.id.toolbar)
 
 	private var isReturning = false
 
@@ -47,7 +47,6 @@ public class PhotosActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_photos)
 		supportPostponeEnterTransition()
-		ButterKnife.bind(this)
 		setSupportActionBar(toolbar)
 		
 		var attachments: Collection<Attachment>? = null
@@ -64,15 +63,8 @@ public class PhotosActivity : AppCompatActivity() {
 		}
 		
 		if (attachments == null) {
-			Croutons.prepare().message(R.string.fail).callback(object : LifecycleCallback {
-				override fun onDisplayed() {
-				}
-				
-				
-				override fun onRemoved() {
-					finish()
-				}
-			}).show(this)
+			crouton(getString(R.string.fail))
+			postDelayed(1000, { finish() })
 			return
 		}
 		
@@ -94,11 +86,6 @@ public class PhotosActivity : AppCompatActivity() {
 		val adapter = PhotosAdapter(data)
 		viewPager.adapter = adapter
 		viewPager.setCurrentItem(currIndex, false)
-		/*viewPager.setOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
-			override fun onPageSelected(position: Int) {
-				adapter.sharedElement
-			}
-		})*/
 	}
 	
 	
@@ -254,15 +241,16 @@ public class PhotosActivity : AppCompatActivity() {
 			for (i in attachers) {
 				i.getValue().cleanup()
 			}
-			sharedElement = null
-			postponedViews.clear()
+			//sharedElement = null
+			//postponedViews.clear()
 		}
 		
 		override fun isViewFromObject(view: View, obj: Any): Boolean = view == obj
 
 		override fun setPrimaryItem(container: ViewGroup?, position: Int, o: Any?) {
 			super.setPrimaryItem(container, position, o)
-			sharedElement = o as ImageView
+			if (o != null)
+				sharedElement = o as ImageView
 		}
 	}
 

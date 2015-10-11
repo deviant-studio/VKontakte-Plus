@@ -9,11 +9,9 @@ import ds.vkplus.R
 public class CommentsActivity : AppCompatActivity() {
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
-		setTitle(R.string.comments)
-		
+
 		if (savedInstanceState == null) {
 			showFragment()
 		}

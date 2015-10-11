@@ -8,6 +8,7 @@ import com.trello.rxlifecycle.components.support.RxFragment
 import ds.vkplus.eventbus.EventBus
 import ds.vkplus.network.RestService
 import ds.vkplus.ui.view.RefreshButton
+import ds.vkplus.utils.actionBar
 
 public abstract class BaseFragment : RxFragment() {
 	
@@ -18,13 +19,12 @@ public abstract class BaseFragment : RxFragment() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		refreshButton = RefreshButton(activity)
-		val ab = (activity as AppCompatActivity).supportActionBar
-		ab.setDisplayShowCustomEnabled(true)
-		ab.customView = refreshButton
+		actionBar.setDisplayShowCustomEnabled(true)
+		actionBar.customView = refreshButton
 		//ab.setDisplayShowHomeEnabled(true);
 		//ab.setDisplayUseLogoEnabled(true);
-		//ab.setDisplayHomeAsUpEnabled(true);
-		
+		actionBar.setDisplayShowTitleEnabled(true)
+
 		refreshButton.setOnClickListener { v -> onRefresh() }
 		//setRetainInstance(true);
 	}

@@ -5,12 +5,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.view.MenuItemCompat
+import android.support.v4.widget.SwipeRefreshLayout
+import android.support.v7.app.AppCompatActivity
 import android.text.TextUtils
 import android.text.format.DateUtils
 import android.view.*
 import android.widget.*
-import butterknife.Bind
-import butterknife.ButterKnife
 import com.j256.ormlite.misc.BaseDaoEnabled
 import com.squareup.otto.Subscribe
 import ds.vkplus.Constants
@@ -24,13 +24,14 @@ import ds.vkplus.model.Comment
 import ds.vkplus.model.Filter
 import ds.vkplus.model.PhotoData
 import ds.vkplus.ui.CircleTransform
+import ds.vkplus.ui.CroutonStyles
 import ds.vkplus.ui.OnScrollBottomListener
+import ds.vkplus.ui.crouton
 import ds.vkplus.ui.view.FixedSizeImageView
 import ds.vkplus.ui.view.FlowLayout
-import ds.vkplus.utils.L
-import ds.vkplus.utils.T
-import ds.vkplus.utils.Utils
-import ds.vkplus.utils.loadRoundImage
+import ds.vkplus.utils.*
+import kotterknife.ViewContainer
+import kotterknife.bindView
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
@@ -39,11 +40,19 @@ import java.util.*
 import java.util.regex.Pattern
 
 class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
-	
+	/*
 	@Bind(android.R.id.list) lateinit var list: ListView
 	@Bind(android.R.id.empty) lateinit var empty: TextView
-	@Bind(R.id.content) lateinit var content: ViewGroup
-	
+	@Bind(R.id.comment_edit) lateinit var commentField: EditText
+*/
+
+	val list: ListView by bindView(android.R.id.list)
+	val empty: TextView by bindView(android.R.id.empty)
+	val commentField: EditText by bindView(R.id.comment_edit)
+	val sendButton: View by bindView(R.id.send)
+	val swipeRefresh: SwipeRefreshLayout by bindView(R.id.swipe_refresh)
+
+
 	private var adapter: CommentsAdapter? = null
 	private var subscriber: Subscriber<List<Comment>>? = null
 	
@@ -58,12 +67,14 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 	
 	override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
-		ButterKnife.bind(this, view)
+		//ButterKnife.bind(this, view)
 		setHasOptionsMenu(true)
-		content.visibility = View.GONE
-		
-		list.setOnScrollListener(OnScrollBottomListener { /*todo*/ })
-		
+
+		actionBar.setDisplayHomeAsUpEnabled(true)
+		actionBar.title="Comments"
+		swipeRefresh.setColorSchemeColors(activity.resources.getColor(R.color.app_color))
+		swipeRefresh.isEnabled=false
+
 		initUI()
 	}
 	
@@ -72,6 +83,7 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 		adapter = CommentsAdapter(activity, ArrayList<Comment>())
 		list.adapter = adapter
 		list.onItemClickListener = this
+		sendButton.setOnClickListener { onCommentClick() }
 		loadAllComments()
 	}
 	
@@ -81,8 +93,14 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 		val p = MenuItemCompat.getActionProvider(menu.findItem(R.id.filter)) as FilterActionProvider
 		p.init(Filter.TYPE_COMMENTS)
 	}
-	
-	
+
+	override fun onOptionsItemSelected(item: MenuItem): Boolean {
+		when (item.itemId){
+			android.R.id.home -> activity.finish()
+		}
+		return super.onOptionsItemSelected(item)
+	}
+
 	override fun onRefresh() {
 		initUI()
 	}
@@ -98,7 +116,41 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 		val actives = DBHelper.instance.filtersDao.fetchActiveFilters(Filter.TYPE_COMMENTS)
 		fetchFiltered(actives)
 	}
-	
+
+	fun onCommentClick() {
+		val text = commentField.text.toString()
+		if (text.isEmpty()) return
+
+		commentField.isEnabled = false
+		sendButton.isEnabled = false
+		swipeRefresh.isRefreshing = true
+		fun onFinish() {
+			commentField.isEnabled = true
+			sendButton.isEnabled = true
+			swipeRefresh.isRefreshing = false
+		}
+		rest.postComment(ownerId, postId, text)
+			.subscribe ({
+				//loadAllComments()
+				commentField.setText("")
+				val comment = Comment()
+				comment.id = it.comment_id
+				comment.from_id = DBHelper.instance.getMyId()
+				comment.text = text
+				comment.date = System.currentTimeMillis()
+				comment.postId = postId
+				DBHelper.instance.saveComments(listOf(comment), postId)
+				adapter?.add(comment)
+				activity.crouton("Posted")
+				list.smoothScrollToPosition(adapter!!.count - 1)
+			}, {
+				it.printStackTrace()
+				activity.crouton("Failed to post comment", CroutonStyles.ERROR)
+				onFinish()
+			}, {
+				onFinish()
+			})
+	}
 	
 	private fun fetchFiltered(actives: List<Filter>) {
 
@@ -160,27 +212,8 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 		adapter!!.addAll(comments)
 		if (comments.size() != 0) {
 			empty.visibility = View.GONE
-			content.visibility = View.VISIBLE
 		}
 	}
-	
-	
-	/*	private fun fillView(comments: CommentsList) {
-			L.v("comments: " + rest.gson.toJson(comments))
-
-			if (comments.items.size() != 0) {
-				empty.visibility = View.GONE
-				content.visibility = View.VISIBLE
-			}
-
-			if (adapter == null) {
-				adapter = CommentsAdapter(activity, comments.items)
-				list.adapter = adapter
-
-			} else {
-				adapter!!.addAll(comments.items)
-			}
-		}*/
 	
 	
 	override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
@@ -261,7 +294,7 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 			h.likes.text = if (item.likesCount > 0) ("+${item.likesCount}") else ""
 			h.likes.isChecked = item.likesUserLikes
 			h.date.text = DateUtils.getRelativeTimeSpanString(item.date * 1000)
-			loadRoundImage(item.producer.thumb,h.avatar)
+			loadRoundImage(item.producer.thumb, h.avatar)
 			
 			h.link.visibility = View.GONE
 			h.flow.visibility = View.GONE
@@ -331,26 +364,21 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 		}
 		
 		
-		class Holder(v: View) {
-			
-			@Bind(R.id.text) lateinit var text: TextView
-			@Bind(R.id.likes) lateinit var likes: CheckedTextView
-			@Bind(R.id.date) lateinit var date: TextView
-			@Bind(R.id.link) lateinit var link: View
-			@Bind(R.id.link_primary) lateinit var linkPrimary: TextView
-			@Bind(R.id.link_secondary) lateinit var linkSecondary: TextView
-			@Bind(R.id.flow) lateinit var flow: FlowLayout
-			@Bind(R.id.title) lateinit var title: TextView
-			@Bind(R.id.icon) lateinit var avatar: ImageView
-			
+		class Holder(val v: View) : ViewContainer(v) {
+
+			val text: TextView by bindView(R.id.text)
+			val likes: CheckedTextView by bindView(R.id.likes)
+			val date: TextView by bindView(R.id.date)
+			val link: View by bindView(R.id.link)
+			val linkPrimary: TextView by bindView(R.id.link_primary)
+			val linkSecondary: TextView by bindView(R.id.link_secondary)
+			val flow: FlowLayout by bindView(R.id.flow)
+			val title: TextView by bindView(R.id.title)
+			val avatar: ImageView by bindView(R.id.icon)
+
 			private var cache: MutableList<View>? = null
 			
-			
-			init {
-				ButterKnife.bind(this, v)
-			}
-			
-			
+
 			fun getViewsCache(): Iterator<View> {
 				if (cache == null) {
 					cache = ArrayList<View>()

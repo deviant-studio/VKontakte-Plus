@@ -50,20 +50,25 @@ public class MainActivity : RxAppCompatActivity() {
 	
 	private fun showFragment() {
 		observable<ProgressDialog> {
-			it.onNext(ProgressDialog.show(this@MainActivity, null, "Loading..."))
+			val progressDialog = ProgressDialog.show(this@MainActivity, null, "Loading...")
+			progressDialog.setCancelable(true)
+			it.onNext(progressDialog)
 		}
 			.observeOn(Schedulers.computation())
 			.doOnNext {
-				//SystemClock.sleep(10000)
 				if (Utils.isMainThread()) throw IllegalThreadStateException()
-				RestService.instance.getGroups()
+				RestService.instance.getGroups().toBlocking().first()
 			}
+			.doOnError { it.printStackTrace() }
 			.observeOn(AndroidSchedulers.mainThread())
 			.compose<ProgressDialog> (bindToLifecycle())
-			.subscribe {
+			.subscribe ({
 				it.dismiss()
 				supportFragmentManager.beginTransaction().replace(R.id.container, getFragment(), "news").commit()
-			}
+			},{
+				L.e("failed to attach fragment")
+				it.printStackTrace()
+			})
 	}
 	
 	

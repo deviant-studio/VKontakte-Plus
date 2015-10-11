@@ -10,6 +10,8 @@ import com.j256.ormlite.stmt.QueryBuilder
 import com.j256.ormlite.stmt.Where
 import com.j256.ormlite.table.TableUtils
 import ds.vkplus.App
+import ds.vkplus.Constants
+import ds.vkplus.auth.AccountHelper
 import ds.vkplus.db.extras.AndroidDao
 import ds.vkplus.model.*
 import ds.vkplus.utils.L
@@ -21,10 +23,10 @@ import java.util.regex.Pattern
 
 import ds.vkplus.model.Filter.TYPE_POSTS
 
-public class DBHelper(context: Context) : DBHelperBase(context) {
+class DBHelper(context: Context) : DBHelperBase(context) {
 
 
-	public fun saveNewsResponse(news: NewsResponse) {
+	fun saveNewsResponse(news: NewsResponse) {
 
 		if (news.items == null || news.items.size() == 0)
 			return
@@ -135,7 +137,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchNewsCount(): Int {
+	fun fetchNewsCount(): Int {
 		try {
 			return newsDao.queryBuilder().countOf().toInt()
 		} catch (e: SQLException) {
@@ -146,7 +148,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchLatestNext(): PostData? {
+	fun fetchLatestNext(): PostData? {
 		try {
 			val dao = getDao(PostData::class.java)
 			val qb = dao.queryBuilder().orderBy("fetchDate", false)
@@ -159,7 +161,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchOldestNext(): PostData? {
+	fun fetchOldestNext(): PostData? {
 		try {
 			val dao = getDao(PostData::class.java)
 			val qb = dao.queryBuilder().orderBy("postDate", true)
@@ -172,7 +174,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchNextByPostId(postId: Long): PostData? {
+	fun fetchNextByPostId(postId: Long): PostData? {
 		try {
 			L.v("fetchNextByPostId " + postId)
 			val dao = getDao(PostData::class.java)
@@ -219,7 +221,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun <T : BaseDaoEnabled<Any, Any>> saveEntities(list: Collection<T>?, dao: AndroidDao<T, Int>?) {
+	fun <T : BaseDaoEnabled<Any, Any>> saveEntities(list: Collection<T>?, dao: AndroidDao<T, Int>?) {
 		if (list == null || dao == null)
 			return
 
@@ -232,13 +234,13 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchAllNews(): List<News>? {
+	fun fetchAllNews(): List<News>? {
 		L.v("fetchAllNews")
 		return fetchNews(System.currentTimeMillis() / 1000)
 	}
 
 
-	public fun fetchNews(byDate: Long): List<News>? {
+	fun fetchNews(byDate: Long): List<News>? {
 		try {
 
 			val filters = filtersDao.fetchActiveFilters(Filter.TYPE_POSTS)
@@ -269,7 +271,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun getProducerById(id: Long): Producer {
+	fun getProducerById(id: Long): Producer {
 		var p: Producer? = groupsDao.queryBuilder().where().eq("id", Math.abs(id)).queryForFirst()
 		if (p == null)
 			p = profilesDao.queryBuilder().where().eq("id", Math.abs(id)).queryForFirst()
@@ -282,7 +284,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun dropAll() {
+	fun dropAll() {
 		for (cls in DBHelperBase.classes) {
 			getDao(cls).clearObjectCache()
 			TableUtils.dropTable<Any, Long>(connectionSource, cls, true)
@@ -291,7 +293,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchLatestPost(): News? {
+	fun fetchLatestPost(): News? {
 		try {
 			return newsDao.queryBuilder().orderBy("date", false).where().isNull("parent_id").queryForFirst()
 		} catch (e: SQLException) {
@@ -302,7 +304,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchNewsById(id: Int): News? {
+	fun fetchNewsById(id: Int): News? {
 		try {
 			return newsDao.queryForId(id)
 		} catch (e: SQLException) {
@@ -313,7 +315,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchVideo(id: Int?): Video? {
+	fun fetchVideo(id: Int?): Video? {
 		val dao = getDao<Dao<Video, Int>, Video>(Video::class.java)
 		try {
 			return dao.queryForId(id)
@@ -325,7 +327,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun saveVideo(video: Video) {
+	fun saveVideo(video: Video) {
 		val dao = getDao<Dao<Video, Int>, Video>(Video::class.java)
 		try {
 			dao.update(video)
@@ -337,7 +339,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun saveCommentsResponse(comments: CommentsList, postId: Long) {
+	fun saveCommentsResponse(comments: CommentsList, postId: Long) {
 		try {
 			saveEntities(comments.groups, getDao<AndroidDao<Group, Int>, Group>(Group::class.java))
 			saveEntities(comments.profiles, getDao<AndroidDao<Profile, Int>, Profile>(Profile::class.java))
@@ -351,14 +353,14 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun saveComments(list: List<Comment>?, postId: Long) {
+	fun saveComments(list: List<Comment>?, postId: Long) {
 		if (list == null)
 			return
 		val dao = getDao<AndroidDao<Comment, Int>, Comment>(Comment::class.java)
 		dao.callBatchTasks {
 			for (c in list) {
-				c.likesCount = c.likes.count
-				c.likesUserLikes = c.likes.user_likes > 0
+				c.likesCount = c.likes?.count ?: 0
+				c.likesUserLikes = c.likes?.user_likes ?: 0 > 0
 				c.postId = postId
 				val status = dao.createOrUpdate(c)
 
@@ -373,7 +375,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchCommentById(id: Int): Comment? {
+	fun fetchCommentById(id: Int): Comment? {
 		try {
 			return (getDao(Comment::class.java) as BaseDaoImpl<Any, Any>).queryForId(id) as Comment
 		} catch (e: SQLException) {
@@ -384,7 +386,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchComments(postId: Long?, dateFrom: Long, dateTo: Long, filters: List<Filter>?): List<Comment>? {
+	fun fetchComments(postId: Long?, dateFrom: Long, dateTo: Long, filters: List<Filter>?): List<Comment>? {
 		try {
 			val dao = getDao(Comment::class.java)
 			val b = dao.queryBuilder()
@@ -403,6 +405,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 				L.v("fetch comments with no filters")
 			}
 			L.v("query=" + where.statement)
+			where.or().eq("from_id",getMyId())
 			query = where.prepare()
 
 
@@ -457,7 +460,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchMyGroups(): List<Group>? {
+	fun fetchMyGroups(): List<Group>? {
 		try {
 			return getDao(Group::class.java).queryBuilder().where().eq("is_member", 1).query()
 		} catch (e: SQLException) {
@@ -468,7 +471,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun fetchCurrentGroupFilterId(): String? {
+	fun fetchCurrentGroupFilterId(): String? {
 		try {
 			val parent = getDao(Filter::class.java).queryBuilder().where().eq("title", DBHelperBase.FILTER_BY_GROUP).queryForFirst()
 			if (parent != null)
@@ -481,7 +484,7 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 	}
 
 
-	public fun refreshGroupsFilter(myGroups: List<Group>) {
+	fun refreshGroupsFilter(myGroups: List<Group>) {
 		L.v("groups: save %s groups", myGroups.size())
 		try {
 			val parent = filtersDao.queryBuilder().where().eq("filterType", TYPE_POSTS).and().eq("title", DBHelperBase.FILTER_BY_GROUP).queryForFirst() ?: return
@@ -506,6 +509,12 @@ public class DBHelper(context: Context) : DBHelperBase(context) {
 			e.printStackTrace()
 		}
 
+	}
+	
+	fun getMyId(): Long {
+		with (AccountHelper.instance) {
+			return am.getUserData(getAccount(), Constants.KEY_USERID).toLong()
+		}
 	}
 
 	companion object {

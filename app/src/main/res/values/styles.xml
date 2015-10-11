@@ -1,7 +1,5 @@
 <resources>
 
-
-
     <style name="news_bottom_icon_text">
         <item name="android:drawableLeft">@drawable/checked_like</item>
         <item name="android:gravity">center_vertical</item>

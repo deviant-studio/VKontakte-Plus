@@ -71,10 +71,7 @@ class FlowLayout(context: Context, attributeSet: AttributeSet) : ViewGroup(conte
 		}
 	}
 	
-	
-	/*
-	 * Enabled aggressive block sorting
-	 */
+
 	override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
 		val width = View.MeasureSpec.getSize(widthMeasureSpec) - this.paddingLeft - this.paddingRight
 		var height = View.MeasureSpec.getSize(heightMeasureSpec) - this.paddingTop - this.paddingBottom

@@ -4,10 +4,9 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="actionBarStyle">@style/ActionBar</item>
-        <item name="windowActionBarOverlay">true</item>
+        <!--<item name="windowActionBarOverlay">true</item>-->
         <item name="actionBarTheme">@style/ActionBarTheme</item>
         <item name="android:windowContentOverlay">@null</item>
-      <!--  <item name="actionBarIconColor">#f00</item>-->
         <item name="colorPrimary">@color/app_color</item>
         <item name="colorPrimaryDark">@color/app_color_dark</item>
         <item name="colorAccent">@color/app_color</item>
@@ -17,6 +16,9 @@
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:actionBarItemBackground">@drawable/light_selector</item>
         <item name="android:listChoiceBackgroundIndicator">@drawable/card_selector</item>
+
+       <!-- <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>-->
     </style>
 
     <style name="ActionBar" parent="Widget.AppCompat.ActionBar.Solid">

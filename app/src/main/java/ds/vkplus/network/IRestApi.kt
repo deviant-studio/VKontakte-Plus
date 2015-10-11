@@ -1,7 +1,9 @@
 package ds.vkplus.network
 
 import ds.vkplus.model.*
+import retrofit.http.Body
 import retrofit.http.GET
+import retrofit.http.POST
 import retrofit.http.Query
 import rx.Observable
 
@@ -15,23 +17,25 @@ interface IRestApi {
 			@Query("count") int count);             // max=100
 */
 	@GET("/newsfeed.get")
-	public fun getNews2(
+	fun getNews2(
 		@Query("filters") filters: String,
 		@Query("source_ids") sourceIds: String?, // groups, friends, pages, following, <uid>
 		@Query("start_from") next: String?,
 		@Query("count") count: Int, // max=100
 		@Query("start_time") startTime: Long?,
-		@Query("max_photos") maxPhotos: Int?): Observable<ApiResponse<NewsResponse>>
+		@Query("max_photos") maxPhotos: Int?
+	): Observable<ApiResponse<NewsResponse>>
 	
 	
 	@GET("/wall.get")
-	public fun getWall(
+	fun getWall(
 		@Query("filters") filters: String,
 		@Query("source_ids") sourceIds: String, // groups, friends, pages, following, <uid>
 		@Query("start_from") next: String,
 		@Query("count") count: Int, // max=100
 		@Query("start_time") startTime: Long?,
-		@Query("max_photos") maxPhotos: Int?): Observable<ApiResponse<NewsResponse>>
+		@Query("max_photos") maxPhotos: Int?
+	): Observable<ApiResponse<NewsResponse>>
 	
 	
 	/*
@@ -57,25 +61,83 @@ interface IRestApi {
 	extended	1 — комментарии в ответе будут возвращены в виде пронумерованных объектов, дополнительно будут возвращены списки объектов profiles, groups.
 	флаг, может принимать значения 1 или 0, доступен начиная с версии 5.0*/
 	@GET("/wall.getComments?need_likes=1&extended=1&sort=asc")
-	public fun getComments(
+	fun getComments(
 		//@Query("filters") String filters,
 		//@Query("source_ids") String sourceIds,  // groups, friends, pages, following, <uid>
 		@Query("post_id") postId: Long,
 		@Query("owner_id") ownerId: Long,
 		@Query("offset") offset: Int,
-		@Query("count") count: Int): Observable<ApiResponse<CommentsList>>
+		@Query("count") count: Int
+	): Observable<ApiResponse<CommentsList>>
 	
 	@GET("/wall.getComments?need_likes=1&extended=1&sort=asc")
-	public fun getCommentsRaw(
+	fun getCommentsRaw(
 		//@Query("filters") String filters,
 		//@Query("source_ids") String sourceIds,  // groups, friends, pages, following, <uid>
 		@Query("post_id") postId: Long,
 		@Query("owner_id") ownerId: Long,
 		@Query("offset") offset: Int,
-		@Query("count") count: Int): ApiResponse<CommentsList>
-	
-	
-	
+		@Query("count") count: Int
+	): ApiResponse<CommentsList>
+
+	/*
+Параметри
+owner_id	идентификатор пользователя или сообщества, на чьей стене находится запись, к которой необходимо добавить комментарий.
+
+    Обратите внимание, идентификатор сообщества в параметре owner_id необходимо указывать со знаком "-" — например, owner_id=-1 соответствует идентификатору сообщества ВКонтакте API (club1)
+
+
+ціле число, за замовчуванням ідентифікатор поточного користувача
+post_id	идентификатор записи на стене пользователя или сообщества.
+позитивне число, обов'язковий параметр
+from_group	данный параметр учитывается, если owner_id < 0 (комментарий публикуется на стене группы). 1 — комментарий будет опубликован от имени группы, 0 — комментарий будет опубликован от имени пользователя (по умолчанию).
+прапор, може приймати значення 1 або 0
+text	текст комментария к записи.
+рядок
+reply_to_comment	идентификатор комментария, в ответ на который должен быть добавлен новый комментарий.
+ціле число
+attachments	список объектов, приложенных к комментарию и разделённых символом ",". Поле attachments представляется в формате:
+
+    <type><owner_id>_<media_id>,<type><owner_id>_<media_id>
+
+
+<type> — тип медиа-вложения:
+
+    photo — фотография
+    video — видеозапись
+    audio — аудиозапись
+    doc — документ
+
+
+<owner_id> — идентификатор владельца медиа-вложения
+<media_id> — идентификатор медиа-вложения.
+
+Например:
+
+    photo100172_166443618,photo66748_265827614
+
+
+Параметр является обязательным, если не задан параметр text.
+список рядків, розділених через кому
+sticker_id	идентификатор стикера.
+позитивне число
+ref
+рядок
+Результат
+После успешного выполнения возвращает идентификатор добавленного комментария (comment_id).
+Коди помилок
+213	Нет доступа к комментированию записи
+	* */
+	@GET("/wall.addComment")
+	fun postComment(
+		@Query("owner_id") ownerId: Long,
+		@Query("post_id") postId: Long,
+		@Query("text") text: String,
+		@Query("reply_to_comment") replyTo: Long?
+		//@Body body: String = ""
+	): Observable<ApiResponse<CommentId>>
+
+
 	/*owner_id	идентификатор пользователя или сообщества, которому принадлежат видеозаписи.
 
 	Обратите внимание, идентификатор сообщества в параметре owner_id необходимо указывать со знаком "-" — например, owner_id=-1 соответствует идентификатору сообщества ВКонтакте API (club1)
@@ -109,9 +171,10 @@ interface IRestApi {
 	положительное число
 	extended	определяет, возвращать ли информацию о настройках приватности видео для текущего пользователя.
 			флаг, может принимать значения 1 или 0*/
-	
+
 	@GET("/video.get")
-	public fun getVideo(
+
+	fun getVideo(
 		@Query("videos") videos: String, // 6492_135055734_e0a9bcc31144f67fbd
 		@Query("extended") extended: Int?): Observable<ApiResponse<VideosList>>
 	
@@ -138,17 +201,19 @@ interface IRestApi {
 	access_key	ключ доступа в случае работы с приватными объектами.
 			строка*/
 	@GET("/likes.add")
-	public fun like(
+	fun like(
 		@Query("item_id") id: Long,
 		@Query("owner_id") ownerId: Long,
 		@Query("type") type: String): Observable<ApiResponse<LikeResponse>>
 	
 	@GET("/likes.delete")
-	public fun unlike(
+	fun unlike(
 		@Query("item_id") id: Long,
 		@Query("owner_id") ownerId: Long,
 		@Query("type") type: String): Observable<ApiResponse<LikeResponse>>
 	
 	@GET("/groups.get?extended=1")
-	public fun getGroups(): Observable<ApiResponse<VKList<Group>>>
+	fun getGroups(): Observable<ApiResponse<VKList<Group>>>
 }
+
+

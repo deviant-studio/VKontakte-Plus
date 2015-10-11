@@ -39,6 +39,7 @@
             android:layout_marginTop="5dp"
             android:text="this is really long comment blab alb alb albaoishd oahsud oiuh qiuowdh ioquwh diuq hwdiuqh wdiuqhwoflulhiuhlku luka hwelfkuh alkusehf lkuawehf lkua flkuha lkwefuh"
             android:textColor="@color/dark"
+            android:textIsSelectable="false"
             android:textSize="16sp" />
 
         <ds.vkplus.ui.view.FlowLayout

@@ -9,4 +9,7 @@
     <color name="app_color_dark">#ffcd6800</color>
     <color name="white_semitransparent">#afff</color>
     <color name="white">#fff</color>
+
+    <color name="crouton_red">@color/material_red_700</color>
+    <color name="crouton_blue">@color/material_blue_A200</color>
 </resources>

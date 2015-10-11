@@ -14,7 +14,7 @@ public class App : Application() {
 		instance = this
 		Fabric.with(this, Crashlytics())
 		if (BuildConfig.DEBUG) {
-			//Stetho.initializeWithDefaults(this)
+			Stetho.initializeWithDefaults(this)
 			//LeakCanary.install(this)
 		}
 	}
