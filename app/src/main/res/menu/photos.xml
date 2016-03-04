@@ -5,6 +5,7 @@
     >
     <item android:id="@+id/share"
         android:title="Share"
-        android:icon="@drawable/abc_ic_menu_share_mtrl_alpha"
+        android:icon="@drawable/ic_action_share"
+        android:tint="@color/white"
         app:showAsAction="always" />
 </menu>

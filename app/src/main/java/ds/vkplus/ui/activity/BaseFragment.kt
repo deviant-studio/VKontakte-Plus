@@ -23,7 +23,7 @@ public abstract class BaseFragment : RxFragment() {
 		actionBar.customView = refreshButton
 		//ab.setDisplayShowHomeEnabled(true);
 		//ab.setDisplayUseLogoEnabled(true);
-		actionBar.setDisplayShowTitleEnabled(true)
+
 
 		refreshButton.setOnClickListener { v -> onRefresh() }
 		//setRetainInstance(true);

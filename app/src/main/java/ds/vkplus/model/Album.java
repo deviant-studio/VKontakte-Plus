@@ -35,5 +35,5 @@ public class Album extends BaseDaoEnabled {
 	@DatabaseField
 	public int size;
 
-
+	
 }

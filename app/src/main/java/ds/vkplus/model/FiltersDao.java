@@ -2,14 +2,15 @@ package ds.vkplus.model;
 
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.DatabaseTableConfig;
+
+import java.sql.SQLException;
+import java.util.List;
+
 import ds.vkplus.db.extras.AndroidDao;
 import ds.vkplus.utils.L;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
-
-import java.sql.SQLException;
-import java.util.List;
 
 import static ds.vkplus.model.Filter.State.*;
 
@@ -67,7 +68,7 @@ public class FiltersDao extends AndroidDao<Filter, Integer> {
 				          .subscribe(new Action1<Filter>() {
 					          @Override
 					          public void call(final Filter i) {
-						          L.INSTANCE$.v("filter=" + i.title);
+						          L.INSTANCE.v("filter=" + i.title);
 						          i.state = UNCHECKED;
 						          try {
 							          update(i);

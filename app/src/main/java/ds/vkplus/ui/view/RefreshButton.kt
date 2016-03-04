@@ -4,7 +4,6 @@ import android.animation.AnimatorSet
 import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.os.Handler
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -25,7 +24,7 @@ class RefreshButton(context: Context, attrs: AttributeSet? = null, defStyle: Int
 	private lateinit var root: ViewGroup
 	var notificationsCount: Int = 0
 		set(count) {
-			$notificationsCount = count
+			field = count
 			textLabel.text = count.toString()
 			textLabel.visibility = if (count > 0) View.VISIBLE else View.GONE
 			

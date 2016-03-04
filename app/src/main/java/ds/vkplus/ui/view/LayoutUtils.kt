@@ -4,23 +4,21 @@ import ds.vkplus.App
 import ds.vkplus.model.PhotoData
 import ds.vkplus.utils.L
 import ds.vkplus.utils.Utils
-
-import java.util.ArrayList
-import java.util.HashMap
+import java.util.*
 
 object LayoutUtils {
 	
 	private fun calculateMultiThumbsHeight(list: List<Float>, n: Float, n2: Float): Float {
-		return (n - n2 * (-1 + list.size())) / sum(list)
+		return (n - n2 * (-1 + list.size)) / sum(list)
 	}
 	
 	
 	fun processThumbs(areaWidth: Int, areaHeight: Int, photos: List<PhotoData>) {
 		
-		if (photos.size() != 0) {
+		if (photos.size != 0) {
 			var string = ""
 			val ratios = ArrayList<Float>()
-			val size = photos.size()
+			val size = photos.size
 			var bad = false
 			for (photo in photos) {
 				val ratio = photo.ratio
@@ -47,7 +45,7 @@ object LayoutUtils {
 			}
 			val ratioAverage: Float
 			if (!ratios.isEmpty()) {
-				ratioAverage = sum(ratios) / ratios.size()
+				ratioAverage = sum(ratios) / ratios.size
 			} else {
 				ratioAverage = 1.0f
 			}
@@ -152,7 +150,7 @@ object LayoutUtils {
 					hashMap.put("$i,${size - i}",
 						floatArrayOf(
 							calculateMultiThumbsHeight(horRatios.subList(0, i), width, paddingHorizontal),
-							calculateMultiThumbsHeight(horRatios.subList(i, horRatios.size()), width, paddingHorizontal)))
+							calculateMultiThumbsHeight(horRatios.subList(i, horRatios.size), width, paddingHorizontal)))
 				}
 				for (j in 1..size - 2) {
 					for (k in 1..-1 + (size - j)) {
@@ -160,15 +158,15 @@ object LayoutUtils {
 							floatArrayOf(
 								calculateMultiThumbsHeight(horRatios.subList(0, j), width, paddingHorizontal),
 								calculateMultiThumbsHeight(horRatios.subList(j, j + k), width, paddingHorizontal),
-								calculateMultiThumbsHeight(horRatios.subList(j + k, horRatios.size()), width, paddingHorizontal)))
+								calculateMultiThumbsHeight(horRatios.subList(j + k, horRatios.size), width, paddingHorizontal)))
 					}
 				}
 				var s: String? = null
 				var n33 = 0.0f
-				for (s2 in hashMap.keySet()) {
-					val array2 = hashMap.get(s2)
-					var totalVertPadding = paddingVertical * (array2!!.size() - 1)
-					val length: Int = array2.size()
+				for (s2 in hashMap.keys) {
+					val array2 = hashMap[s2]
+					var totalVertPadding = paddingVertical * (array2!!.size - 1)
+					val length: Int = array2.size
 					var l = 0
 					while (l < length) {
 						totalVertPadding += array2[l]
@@ -178,7 +176,7 @@ object LayoutUtils {
 					var abs = Math.abs(totalVertPadding - height)
 					if (s2.indexOf(44.toChar(),0,false) != -1) {
 						val split = s2.split(",")
-						if (Integer.parseInt(split[0]) > Integer.parseInt(split[1]) || (split.size() > 2 && Integer.parseInt(split[1]) > Integer.parseInt(split[2]))) {
+						if (Integer.parseInt(split[0]) > Integer.parseInt(split[1]) || (split.size > 2 && Integer.parseInt(split[1]) > Integer.parseInt(split[2]))) {
 							abs *= 1.1.toFloat()
 						}
 					}
@@ -187,22 +185,22 @@ object LayoutUtils {
 						n33 = abs
 					}
 				}
-				val photosCopy = ArrayList(photos)
+				val photosCopy = java.util.ArrayList<PhotoData>(photos)
 				val horRatiosCopy = ArrayList(horRatios)
 				val split2 = s!!.split(",")
-				val array3 = hashMap.get(s)
+				val array3 = hashMap[s]
 				var index = 0
 				for (aSplit2 in split2) {
 					val int1 = Integer.parseInt(aSplit2)
 					val tempPhotos = ArrayList<PhotoData>()
 					for (i in 0..int1 - 1) {
-						tempPhotos.add(photosCopy.remove(0))
+						tempPhotos.add(photosCopy.removeAt(0))
 					}
 					val value = array3!![index]
 					++index
-					val n40 = -1 + tempPhotos.size()
+					val n40 = -1 + tempPhotos.size
 					for (j in tempPhotos.indices) {
-						tempPhotos.get(j).setViewSize((value * horRatiosCopy.remove(0)).toInt().toFloat(), value.toInt().toFloat(), j == n40, false)
+						tempPhotos.get(j).setViewSize((value * horRatiosCopy.removeAt(0)).toInt().toFloat(), value.toInt().toFloat(), j == n40, false)
 					}
 				}
 			}
@@ -224,5 +222,4 @@ object LayoutUtils {
 		return Math.round(paramFloat * displayDensity)
 	}
 
-	//fun String.indexOf(char:Int)=
 }

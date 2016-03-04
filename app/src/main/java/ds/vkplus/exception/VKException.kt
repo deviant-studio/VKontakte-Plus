@@ -21,9 +21,8 @@ class VKException : RuntimeException {
     }
 
     companion object {
-
-        val CODE_UNKNOWN: Int = -1
-        val CODE_NETWORK: Int = -2
-        val CODE_TOKEN_OBSOLETED: Int = 5
+        const val CODE_UNKNOWN: Int = -1
+        const val CODE_NETWORK: Int = -2
+        const val CODE_TOKEN_OBSOLETED: Int = 5
     }
 }

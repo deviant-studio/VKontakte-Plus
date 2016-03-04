@@ -6,7 +6,6 @@ import com.j256.ormlite.dao.BaseDaoImpl
 import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.misc.BaseDaoEnabled
 import com.j256.ormlite.stmt.PreparedQuery
-import com.j256.ormlite.stmt.QueryBuilder
 import com.j256.ormlite.stmt.Where
 import com.j256.ormlite.table.TableUtils
 import ds.vkplus.App
@@ -15,20 +14,15 @@ import ds.vkplus.auth.AccountHelper
 import ds.vkplus.db.extras.AndroidDao
 import ds.vkplus.model.*
 import ds.vkplus.utils.L
-
 import java.sql.SQLException
-import java.util.concurrent.Callable
-import java.util.regex.Matcher
 import java.util.regex.Pattern
-
-import ds.vkplus.model.Filter.TYPE_POSTS
 
 class DBHelper(context: Context) : DBHelperBase(context) {
 
 
 	fun saveNewsResponse(news: NewsResponse) {
 
-		if (news.items == null || news.items.size() == 0)
+		if (news.items == null || news.items.size == 0)
 			return
 
 		try {
@@ -43,7 +37,7 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 					saveNews(item, null)
 					if (item.copy_history != null) {
 						L.v("saving nested post...")
-						for (nested in item.copy_history) {
+						for (nested in item.copy_history!!) {
 							saveNews(nested, item)
 						}
 					}
@@ -51,7 +45,7 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 			}
 
 			L.v("saving next value... " + news.next_from)
-			saveNext(news.items.get(news.items.size() - 1), news.next_from)
+			saveNext(news.items[news.items.size - 1], news.next_from)
 		} catch (e: SQLException) {
 			e.printStackTrace()
 		}
@@ -86,8 +80,8 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 			News.TYPE_WALL_PHOTO, News.TYPE_PHOTO -> {
 				item.post_id = item.date
 				if (item.photos != null) {
-					item.photosPersist = item.photos.items
-					for (p in item.photosPersist) {
+					item.photosPersist = item.photos!!.items as java.util.Collection<Photo>
+					for (p in item.photosPersist!!) {
 						p.news = item    // important!
 						getDao(Photo::class.java).createOrUpdate(p)
 					}
@@ -99,8 +93,8 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 
 		//save attachments
 		if (item.attachments != null)
-			for (a in item.attachments) {
-				a.news = item    // important!
+			for (a in item.attachments!!) {
+				a!!.news = item    // important!
 				saveAttachment(a)
 			}
 	}
@@ -188,7 +182,7 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 
 
 	private fun saveAttachment(a: Attachment) {
-		val content = a.getContent<BaseDaoEnabled<*, *>>() ?: return // actually this shouldnt happen
+		val content = a.getContent<BaseDaoEnabled<Any, Any>>() ?: return // actually this shouldnt happen
 
 		if (!isAttachmentExist(a))
 			try {
@@ -252,7 +246,7 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 				.isNull("parent_id")
 
 			val query: PreparedQuery<Any>
-			if (filters != null && filters.size() != 0) {
+			if (filters != null && filters.size != 0) {
 				L.v("fetch news with filters")
 				for (filter in filters) {
 					whereBuilder(where, filter.condition)
@@ -395,7 +389,7 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 			where.between("date", dateFrom, dateTo)
 			where.and().eq("postId", postId)
 			val query: PreparedQuery<*>
-			if (filters != null && filters.size() != 0) {
+			if (filters != null && filters.size != 0) {
 				L.v("fetch comments with filters")
 				for (filter in filters) {
 					//where.and();
@@ -485,21 +479,21 @@ class DBHelper(context: Context) : DBHelperBase(context) {
 
 
 	fun refreshGroupsFilter(myGroups: List<Group>) {
-		L.v("groups: save %s groups", myGroups.size())
+		L.v("groups: save %s groups", myGroups.size)
 		try {
-			val parent = filtersDao.queryBuilder().where().eq("filterType", TYPE_POSTS).and().eq("title", DBHelperBase.FILTER_BY_GROUP).queryForFirst() ?: return
+			val parent = filtersDao.queryBuilder().where().eq("filterType", Filter.TYPE_POSTS).and().eq("title", DBHelperBase.FILTER_BY_GROUP).queryForFirst() ?: return
 
 			//filtersDao.deleteAll();
 			val cacheds = filtersDao.queryBuilder().where().eq("parent_id", parent.id).and().eq("state", Filter.State.UNCHECKED).query()
 
-			L.v("groups: delete %s filters", cacheds.size())
+			L.v("groups: delete %s filters", cacheds.size)
 			filtersDao.delete(cacheds)
 			filtersDao.clearObjectCache()
 
 			for (group in myGroups) {
 
-				Filter(group.getName(), (-group.id).toString(), Filter.State.UNCHECKED, TYPE_POSTS, parent)
-				L.v("group %s saved", group.getName())
+				Filter(group.name, (-group.id).toString(), Filter.State.UNCHECKED, Filter.TYPE_POSTS, parent)
+				L.v("group %s saved", group.name)
 			}
 
 

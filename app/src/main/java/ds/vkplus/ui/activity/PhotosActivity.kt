@@ -12,9 +12,12 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.transition.Transition
 import android.transition.TransitionInflater
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
-import de.keyboardsurfer.android.widget.crouton.LifecycleCallback
+import butterknife.bindView
 import ds.vkplus.Constants
 import ds.vkplus.R
 import ds.vkplus.db.DBHelper
@@ -26,7 +29,6 @@ import ds.vkplus.utils.L
 import ds.vkplus.utils.Utils
 import ds.vkplus.utils.loadImageBlocking
 import ds.vkplus.utils.postDelayed
-import kotterknife.bindView
 import rx.android.schedulers.AndroidSchedulers
 import rx.lang.kotlin.observable
 import rx.schedulers.Schedulers
@@ -34,7 +36,7 @@ import uk.co.senab.photoview.PhotoViewAttacher
 import java.io.IOException
 import java.util.*
 
-public class PhotosActivity : AppCompatActivity() {
+class PhotosActivity : AppCompatActivity() {
 	val viewPager: HackyViewPager by bindView(R.id.viewpager)
 	val toolbar: Toolbar by bindView(R.id.toolbar)
 
@@ -42,7 +44,7 @@ public class PhotosActivity : AppCompatActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		if (Build.VERSION.SDK_INT >= 21)
-			window.sharedElementEnterTransition = TransitionInflater.from(this).inflateTransition(R.anim.image_transition)
+			window.sharedElementEnterTransition = TransitionInflater.from(this).inflateTransition(R.transition.image_transition)
 
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_photos)
@@ -54,7 +56,7 @@ public class PhotosActivity : AppCompatActivity() {
 		L.v("post id=" + id)
 		val post = DBHelper.instance.fetchNewsById(id.toInt())
 		if (post != null) {
-			attachments = post.attachments
+			attachments = post.attachments as kotlin.collections.Collection<Attachment>
 		} else {
 			val comment = DBHelper.instance.fetchCommentById(id.toInt())
 			if (comment != null) {
@@ -154,8 +156,8 @@ public class PhotosActivity : AppCompatActivity() {
 				override fun onTransitionEnd(transition: Transition?) {
 					L.v("onTransitionEnd")
 					for (entry in postponedViews) {
-						entry.getKey().setImageBitmap(entry.getValue())
-						attachers.getOrPut(entry.getKey(), provideAttacher(entry.getKey())).update()
+						entry.key.setImageBitmap(entry.value)
+						attachers.getOrPut(entry.key, provideAttacher(entry.key)).update()
 					}
 					postponedViews.clear()
 					animating = false
@@ -164,12 +166,12 @@ public class PhotosActivity : AppCompatActivity() {
 		}
 
 		override fun getCount(): Int {
-			return data.size()
+			return data.size
 		}
 		
 		
-		public fun getItemAtPos(index: Int): PhotoData {
-			return data.get(index)
+		fun getItemAtPos(index: Int): PhotoData {
+			return data[index]
 		}
 		
 		
@@ -239,7 +241,7 @@ public class PhotosActivity : AppCompatActivity() {
 
 		fun cleanUpAll() {
 			for (i in attachers) {
-				i.getValue().cleanup()
+				i.value.cleanup()
 			}
 			//sharedElement = null
 			//postponedViews.clear()

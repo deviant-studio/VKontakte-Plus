@@ -20,6 +20,7 @@ import android.view.*
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.Interpolator
 import android.widget.*
+import butterknife.bindView
 import com.j256.ormlite.misc.BaseDaoEnabled
 import com.squareup.otto.Subscribe
 import ds.vkplus.App
@@ -35,14 +36,13 @@ import ds.vkplus.eventbus.events.UrlClickEvent
 import ds.vkplus.model.*
 import ds.vkplus.model.Filter
 import ds.vkplus.network.RestService
-import ds.vkplus.ui.OnScrollBottomRecyclerViewListener
 import ds.vkplus.ui.CroutonStyles
+import ds.vkplus.ui.OnScrollBottomRecyclerViewListener
 import ds.vkplus.ui.crouton
 import ds.vkplus.ui.view.FixedSizeImageView
 import ds.vkplus.ui.view.FlowLayout
 import ds.vkplus.ui.view.LayoutUtils
 import ds.vkplus.utils.*
-import kotterknife.bindView
 import rx.Observable
 import rx.Subscriber
 import rx.lang.kotlin.observable
@@ -80,7 +80,7 @@ class NewsFragment : BaseFragment() {
 		
 		loadNews()
 		
-		val ab = (activity as AppCompatActivity).supportActionBar
+		val ab = (activity as AppCompatActivity).supportActionBar!!
 		ab.setDisplayShowTitleEnabled(true)
 		ab.setTitle(R.string.news)
 
@@ -250,7 +250,7 @@ class NewsFragment : BaseFragment() {
 	
 	
 	private fun fillView(news: List<News>) {
-		if (news.size() != 0) {
+		if (news.size != 0) {
 			emptyView.visibility = View.GONE
 			toggleProgress(false)
 		} else {
@@ -363,9 +363,9 @@ class NewsFragment : BaseFragment() {
 			h.linkContainer.visibility = View.GONE
 			
 			// fill repost data
-			if (item.copy_history != null && item.copy_history.size() > 0) {
+			if (item.copy_history != null && item.copy_history!!.size() > 0) {
 				h.repostHeader.visibility = View.VISIBLE
-				val repost = item.copy_history.iterator().next()
+				val repost = item.copy_history!!.iterator().next()
 				h.repostTitle.text = repost.producer.name
 				h.repostDate.text = DateUtils.getRelativeTimeSpanString(repost.date * 1000)
 				loadRoundImage(repost.producer.thumb, h.repostAvatar)
@@ -377,7 +377,7 @@ class NewsFragment : BaseFragment() {
 			
 			// crop text
 			val text = item.text
-			val collapsed = text != null && text.length() > NewsResponse.POST_LENGTH_THRESHOLD + 20 && !item.isExpanded
+			val collapsed = text != null && text.length > NewsResponse.POST_LENGTH_THRESHOLD + 20 && !item.isExpanded
 			h.expand.toggle(collapsed)
 			h.textView.text = if (collapsed) text!!.substring(0, NewsResponse.POST_LENGTH_THRESHOLD) else text
 			//}
@@ -388,7 +388,7 @@ class NewsFragment : BaseFragment() {
 			val photos = ArrayList<PhotoData>()
 			
 			if (item.attachments != null) {
-				for (a in item.attachments) {
+				for (a in item.attachments!!) {
 					//L.v("attahcment type=" + a.type)
 					if (a.getContent<BaseDaoEnabled<*, *>>() == null) {
 						L.e("attachment content is null!")
@@ -414,7 +414,7 @@ class NewsFragment : BaseFragment() {
 						
 						Attachment.TYPE_LINK -> {
 							imageUrl = a.link.image_src
-							if (imageUrl != null && photos.size() == 0) {
+							if (imageUrl != null && photos.size == 0) {
 								val pd2 = PhotoData(imageUrl, 1600, 1200, PhotoData.TYPE_LINK, 0)
 								pd2.extra = a.link.url
 								photos.add(pd2)
@@ -444,11 +444,11 @@ class NewsFragment : BaseFragment() {
 			}
 			
 			if (item.photosPersist != null)
-				for (photo in item.photosPersist) {
+				for (photo in item.photosPersist!!) {
 					photos.add(PhotoData(photo.photo_604!!, photo.width, photo.height, PhotoData.TYPE_PHOTO, photo.id))
 				}
 			
-			if (photos.size() != 0) {
+			if (photos.size != 0) {
 				h.flowView.toggle(true)
 				val displayMetrics = App.instance.resources.displayMetrics
 				val size = Math.min(displayMetrics.widthPixels, displayMetrics.heightPixels) - Utils.dp(App.instance, 40)
@@ -483,32 +483,32 @@ class NewsFragment : BaseFragment() {
 				|| recycler.scrollState == RecyclerView.SCROLL_STATE_DRAGGING
 		
 		
-		override fun getItemCount(): Int = data?.size() ?: 0
+		override fun getItemCount(): Int = data?.size ?: 0
 		
 		
 		fun addToEnd(newData: List<News>) {
 			val total = itemCount
 			if (data != null) {
-				if (data!!.size() < 3)
+				if (data!!.size < 3)
 					initTime = System.currentTimeMillis()
 				data!!.addAll(newData)
 			} else
 				data = ArrayList(newData)
 			
-			notifyItemRangeInserted(total, newData.size())
+			notifyItemRangeInserted(total, newData.size)
 			//resetBottomScroller();
 			
 			// clean up a little bit
-			if (data!!.size() > MAX_SIZE && newData.size() < MAX_SIZE) {
+			if (data!!.size > MAX_SIZE && newData.size < MAX_SIZE) {
 				//data.removeAll(data.subList(0, newData.size()));
 				val i = data!!.iterator()
 				var c = 0
-				while (i.hasNext() && c < newData.size()) {
+				while (i.hasNext() && c < newData.size) {
 					i.next()
 					i.remove()
 					c++
 				}
-				notifyItemRangeRemoved(0, newData.size())
+				notifyItemRangeRemoved(0, newData.size)
 			}
 			
 			
@@ -539,10 +539,10 @@ class NewsFragment : BaseFragment() {
 			fun loadImages(size: Int, flow: ViewGroup, imagesIterator: Iterator<View>, photos: List<PhotoData>, itemId: Long, loadPhotos: Boolean) {
 				//L.v("item id "+itemId);
 				flow.removeAllViews()
-				Utils.toggleView(flow, photos.size() != 0)
+				Utils.toggleView(flow, photos.size != 0)
 				LayoutUtils.processThumbs(size, size, photos)
 				
-				if (photos.size() != 0) {
+				if (photos.size != 0) {
 					for (photo in photos) {
 						//Utils.startTimer()
 						val img: FixedSizeImageView
@@ -648,7 +648,7 @@ class NewsFragment : BaseFragment() {
 				likesView.setOnClickListener { onLikeClick(it) }
 				reposts.setOnClickListener { onClick(it) }
 				linkContainer.setOnClickListener { onLinkClick(it) }
-				titleView.setOnClickListener { title -> L.v("data size=%s pos=%s", adapter.data!!.size(), position) }
+				titleView.setOnClickListener { title -> L.v("data size=%s pos=%s", adapter.data!!.size, position) }
 
 				overflow.setOnClickListener { view ->
 					val popup = ListPopupWindow(view.context)
@@ -658,15 +658,13 @@ class NewsFragment : BaseFragment() {
 					popup.setAdapter(ArrayAdapter.createFromResource(view.context, R.array.overflow_items, android.R.layout.simple_list_item_1))
 					popup.setOnItemClickListener { parent, view2, position, id ->
 						when (position) {
-							0 // share
-							-> Utils.shareText(view.context, Utils.getPostUrl(getItem()))
-							1 // copy to clipboard
-							-> {
+							0 -> Utils.shareText(view.context, Utils.getPostUrl(getItem())) // share
+							1 -> {
+								// copy to clipboard
 								Toast.makeText(view.context, "Copied to Clipboard", 0).show()
-								Utils.copyNoteUrlToClipboard(view.context, getItem().text)
+								Utils.copyNoteUrlToClipboard(view.context, getItem().text!!)
 							}
-							2// debug
-							-> L.v("item=" + getItem().toString())
+							2 -> L.v("item=" + getItem().toString())    // debug
 						}
 						popup.dismiss()
 					}
@@ -707,12 +705,13 @@ class NewsFragment : BaseFragment() {
 
 			private fun onClick(view: View) {
 				L.v("%s %s", itemId, position)
+				//T.show(context, "click")
 				EventBus.post(ClickEvent(getItem(), view.id))
 			}
 
 
 			private fun getItem(): News {
-				return adapter.data!!.get(position)
+				return adapter.data!![position]
 			}
 
 

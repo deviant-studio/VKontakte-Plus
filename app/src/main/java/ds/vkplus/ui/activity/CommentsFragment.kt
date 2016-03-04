@@ -6,11 +6,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.view.MenuItemCompat
 import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.app.AppCompatActivity
 import android.text.TextUtils
 import android.text.format.DateUtils
 import android.view.*
 import android.widget.*
+import butterknife.ViewContainer
+import butterknife.bindView
 import com.j256.ormlite.misc.BaseDaoEnabled
 import com.squareup.otto.Subscribe
 import ds.vkplus.Constants
@@ -25,13 +26,10 @@ import ds.vkplus.model.Filter
 import ds.vkplus.model.PhotoData
 import ds.vkplus.ui.CircleTransform
 import ds.vkplus.ui.CroutonStyles
-import ds.vkplus.ui.OnScrollBottomListener
 import ds.vkplus.ui.crouton
 import ds.vkplus.ui.view.FixedSizeImageView
 import ds.vkplus.ui.view.FlowLayout
 import ds.vkplus.utils.*
-import kotterknife.ViewContainer
-import kotterknife.bindView
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
@@ -70,6 +68,7 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 		//ButterKnife.bind(this, view)
 		setHasOptionsMenu(true)
 
+		actionBar.setDisplayShowTitleEnabled(true)
 		actionBar.setDisplayHomeAsUpEnabled(true)
 		actionBar.title="Comments"
 		swipeRefresh.setColorSchemeColors(activity.resources.getColor(R.color.app_color))
@@ -197,7 +196,7 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 			
 			override fun onNext(comments: List<Comment>?) {
 				if (comments != null) {
-					L.i("got %s comments", comments.size())
+					L.i("got %s comments", comments.size)
 					fillView2(comments)
 				}
 				
@@ -210,7 +209,7 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 	
 	private fun fillView2(comments: List<Comment>) {
 		adapter!!.addAll(comments)
-		if (comments.size() != 0) {
+		if (comments.size != 0) {
 			empty.visibility = View.GONE
 		}
 	}
@@ -303,7 +302,7 @@ class CommentsFragment : BaseFragment(), AdapterView.OnItemClickListener {
 				val photos = ArrayList<PhotoData>()
 				for (a in item.attachments) {
 					L.v("attahcment type=" + a.type)
-					if (a.getContent<BaseDaoEnabled<*, *>>() == null) {
+					if (a.getContent<BaseDaoEnabled<Any, Any>>() == null) {
 						L.e("attachment content is null!")
 					}
 					var imageUrl: String? = null

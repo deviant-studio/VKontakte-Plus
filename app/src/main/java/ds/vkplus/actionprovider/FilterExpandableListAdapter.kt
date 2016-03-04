@@ -1,9 +1,7 @@
 package ds.vkplus.actionprovider
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.CheckBox
@@ -14,7 +12,6 @@ import ds.vkplus.model.Filter
 import ds.vkplus.model.FiltersDao
 import ds.vkplus.ui.view.ThreeStateButton
 import ds.vkplus.utils.L
-
 import java.sql.SQLException
 
 //custom fake expandable adapter
@@ -24,6 +21,9 @@ class FilterExpandableListAdapter(private val filters: List<Filter>) : BaseExpan
 
 	private val dao: FiltersDao
 
+	init {
+		dao = DBHelper.instance.filtersDao
+	}
 
 	private val listener: (View) -> Unit = {
 		try {
@@ -37,14 +37,11 @@ class FilterExpandableListAdapter(private val filters: List<Filter>) : BaseExpan
 		}
 	}
 
-	init {
-		dao = DBHelper.instance.filtersDao
-	}
 
 
-	override fun getGroupCount(): Int = filters.size()
+	override fun getGroupCount(): Int = filters.size
 
-	override fun getChildrenCount(groupPosition: Int): Int = filters.get(groupPosition).getSubItems().size()
+	override fun getChildrenCount(groupPosition: Int): Int = filters.get(groupPosition).getSubItems().size
 
 	override fun getGroup(groupPosition: Int): Any = filters.get(groupPosition)
 
@@ -66,7 +63,7 @@ class FilterExpandableListAdapter(private val filters: List<Filter>) : BaseExpan
 		val item = getGroup(groupPosition) as Filter
 		val button = v?.findViewById(R.id.threeStateCheck) as ThreeStateButton
 		if (item.mode == Filter.MODE_CHECK) {
-			button.state = item.state.ordinal()
+			button.state = item.state.ordinal
 			button.visibility = View.VISIBLE
 			button.tag = item
 			button.onStateChangedListener = listener
@@ -75,7 +72,7 @@ class FilterExpandableListAdapter(private val filters: List<Filter>) : BaseExpan
 
 		(v?.findViewById(R.id.text) as TextView).text = item.title
 
-		return v
+		return v!!
 	}
 
 

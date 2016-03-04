@@ -20,8 +20,17 @@ import java.util.regex.Pattern
 
 public class AuthActivity : AccountAuthenticatorActivity() {
 
-    lateinit private var webView: WebView
 
+
+    companion object {
+
+        val AUTH_URL: String = "https://oauth.vk.com/authorize?client_id=${PrivateConstants.VK_APP_ID}" +
+            "&scope=groups,friends,wall,video,audio,pages,messages,offline&redirect_uri=" +
+            "https://oauth.vk.com/blank.html&display=mobile&v=${RestService.API_VERSION}&response_type=token"
+
+        val PATTERN_TOKEN_URL: Pattern = Pattern.compile("""^https://oauth\.vk\.com/blank\.html#access_token=(.+)&expires_in=(\d+)&user_id=(\d+)$""")
+    }
+    lateinit private var webView: WebView
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(icicle: Bundle?) {
@@ -82,12 +91,5 @@ public class AuthActivity : AccountAuthenticatorActivity() {
         }
     }
 
-    companion object {
 
-        val AUTH_URL: String = "https://oauth.vk.com/authorize?client_id=${PrivateConstants.VK_APP_ID}" +
-                "&scope=groups,friends,wall,video,audio,pages,messages&redirect_uri=" +
-                "https://oauth.vk.com/blank.html&display=mobile&v=${RestService.API_VERSION}&response_type=token"
-
-        val PATTERN_TOKEN_URL: Pattern = Pattern.compile("""^https://oauth\.vk\.com/blank\.html#access_token=(.+)&expires_in=(\d+)&user_id=(\d+)$""")
-    }
 }

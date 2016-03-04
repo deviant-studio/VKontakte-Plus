@@ -3,7 +3,6 @@ package ds.vkplus.ui.activity
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
-import android.os.SystemClock
 import android.support.v4.app.Fragment
 import android.view.Menu
 import android.view.MenuItem
@@ -11,8 +10,6 @@ import android.view.View
 import android.view.Window
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity
 import ds.vkplus.R
-import ds.vkplus.db.DBHelper
-import ds.vkplus.exception.VKException
 import ds.vkplus.model.ApiResponse
 import ds.vkplus.network.RestService
 import ds.vkplus.utils.L
@@ -22,7 +19,7 @@ import rx.lang.kotlin.observable
 import rx.schedulers.Schedulers
 
 
-public class MainActivity : RxAppCompatActivity() {
+class MainActivity : RxAppCompatActivity() {
 
 	var newTransitionName: String? = null
 	
@@ -31,7 +28,8 @@ public class MainActivity : RxAppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 
-		supportActionBar.setIcon(R.drawable.logo)
+		supportActionBar?.setIcon(R.drawable.logo)
+		supportActionBar?.setDisplayShowTitleEnabled(false)
 
 		if (savedInstanceState == null) {
 			showFragment()
@@ -40,7 +38,7 @@ public class MainActivity : RxAppCompatActivity() {
 		//RestService.instance.getGroups().subscribe({ L.v("groups: fetched successfully") }, { it.printStackTrace() })
 	}
 	
-	public fun getActionBarView(): View {
+	fun getActionBarView(): View {
 		val window = window
 		val v = window.decorView
 		val resId = resources.getIdentifier("action_bar_container", "id", "android")

@@ -5,23 +5,19 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import ds.vkplus.auth.AccountHelper
 import ds.vkplus.db.DBHelper
-import ds.vkplus.db.extras.AndroidDao
 import ds.vkplus.exception.VKException
 import ds.vkplus.model.*
 import ds.vkplus.utils.L
 import ds.vkplus.utils.Utils
-import retrofit.RequestInterceptor
 import retrofit.RestAdapter
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.functions.Action1
 import rx.functions.Func1
-import rx.functions.Func2
 import rx.lang.kotlin.observable
 import rx.schedulers.Schedulers
 import rx.subjects.ReplaySubject
-
 import java.lang.reflect.Modifier
 
 class RestService {
@@ -51,7 +47,7 @@ class RestService {
 		it.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 	}
 	
-	private fun <K> networker(request: Observable<ApiResponse<K>>): Observable<K> {
+	private fun <K: Any> networker(request: Observable<ApiResponse<K>>): Observable<K> {
 		
 		return request.map({
 			if (it.error != null && it.error.error_code != VKException.CODE_NETWORK) {
@@ -63,7 +59,7 @@ class RestService {
 			.retry({ count: Int, e: Throwable ->
 				L.v("onRetry " + count)
 				if (e is VKException) {
-					L.e("vk exception: " + e.getMessage())
+					L.e("vk exception: " + e.message)
 					if (e.code == VKException.CODE_TOKEN_OBSOLETED) {
 						try {
 							AccountHelper.instance.refreshToken()
@@ -129,7 +125,7 @@ class RestService {
 				do {
 					val list = restApi.getCommentsRaw(postId, ownerId, offset, count)
 					if (list.error == null) {
-						if (list.response.items.size() > 0) {
+						if (list.response.items.size > 0) {
 							subscriber.onNext(list.response)
 							needMore = true
 							offset += count
@@ -150,8 +146,8 @@ class RestService {
 		o.subscribe({
 			L.v("is main thread=" + Utils.isMainThread())
 			db.saveCommentsResponse(it, postId)
-			val dateFrom = it.items.get(0).date
-			val dateTo = it.items.get(it.items.size() - 1).date
+			val dateFrom = it.items[0].date
+			val dateTo = it.items[it.items.size - 1].date
 			val filters = db.filtersDao.fetchActiveFilters(Filter.TYPE_COMMENTS)
 			val fetched = db.fetchComments(postId, dateFrom, dateTo, filters)
 			result.onNext(fetched)

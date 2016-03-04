@@ -1,19 +1,15 @@
 package ds.vkplus.auth
 
 import android.accounts.*
+import android.accounts.AccountManager.*
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import ds.vkplus.App
 import ds.vkplus.Constants
 import ds.vkplus.utils.L
-import ds.vkplus.utils.Utils
-
-import java.io.IOException
-
-import android.accounts.AccountManager.*
 import ds.vkplus.utils.post
+import java.io.IOException
 
 public class AccountHelper private constructor(var ctx: Context) {
     val am: AccountManager by lazy { AccountManager.get(ctx.applicationContext) }
@@ -87,7 +83,7 @@ public class AccountHelper private constructor(var ctx: Context) {
 
     public fun getAccount(): Account? {
         val accs = am.getAccountsByType(Constants.ACCOUNT_TYPE)
-        if (accs.size() == 0) {
+        if (accs.size == 0) {
             L.w("auth: no accounts found")
             return null
         }

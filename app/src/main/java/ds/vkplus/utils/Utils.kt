@@ -31,7 +31,7 @@ object Utils {
 	
 	fun setSpanForSubstring(text: CharSequence, substring: String, color: Int): CharSequence {
 		val start = text.toString().indexOf(substring)
-		val end = start + substring.length()
+		val end = start + substring.length
 		val spannableStringBuilder = SpannableStringBuilder(text)
 		spannableStringBuilder.setSpan(ForegroundColorSpan(color), start, end, 0)
 		
@@ -162,4 +162,4 @@ fun loadRoundImage(url: String, img: ImageView) = picasso.load(url).transform(Ci
 fun loadImageBlocking(url: String) = picasso.load(url).config(Bitmap.Config.RGB_565).get()
 
 val Fragment.actionBar: ActionBar
-	get() = (this.activity as AppCompatActivity).supportActionBar
+	get() = (this.activity as AppCompatActivity).supportActionBar!!

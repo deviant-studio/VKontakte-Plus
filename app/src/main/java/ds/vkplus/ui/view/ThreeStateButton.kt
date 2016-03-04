@@ -13,7 +13,7 @@ public class ThreeStateButton(context: Context, attrs: AttributeSet? = null) : I
 	
 	var state: Int = 0
 		set(s) {
-			$state = s
+			field = s
 			redraw()
 		}
 	
